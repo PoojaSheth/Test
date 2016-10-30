@@ -1,0 +1,3867 @@
+swagger: '2.0'
+info:
+  title: Workforce Management API
+  description: >-
+    This document outlines workforceManagement API which is a Restful API
+    exposed as JSON payload over HTTPS.
+  version: 1.0.0
+  termsOfService: 'http://helloreverb.com/terms/'
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: nonprod-api.in.telstra.com.au
+basePath: /v1/workforce-management
+schemes:
+  - https
+security:
+  - OAuth2:
+      - QUERYAPPOINTMENT
+      - CONSUMEAPPOINTMENT
+      - RETRIEVEAPPOINTMENT
+      - COMMITAPPOINTMENT
+      - UPDATEAPPOINTMENT
+paths:
+  /workforce-availability-query:
+    post:
+      operationId: >-
+        Retrieves the available slots to book an appointment based on modified
+        search date
+      summary: >-
+        This resource gives the consumer the capability to check the
+        availability of an appointment or commitment within the specified time
+        frame.
+      description: >
+        This resource gives the consumer the capability to check the
+        availability of an appointment or commitment (commitments are not
+        applicable to NBN) within the specified time frame and in a res-schedule
+        scenario allows the consumer to check availability based on the modified
+        search dates.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            A header in the format 'Bearer {access_token}' - get the token by
+            using the OAuth API with the scope 'QUERYAPPOINTMENT'
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: application/json ; charset= utf-8
+          type: string
+          required: true
+        - name: Request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/QWARequest'
+      tags:
+        - workforce-availability-query
+      responses:
+        '200':
+          description: Successful
+          schema:
+            $ref: '#/definitions/QWAResponse'
+        '400':
+          description: >-
+            Missing mandatory data or element - Please update your request
+            and            send again.  OR The request was invalid -  Please
+            update your request and send again OR <<ISL Error Message>>
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid or no credentials passed in the request
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: >-
+            Authorization credentials passed and accepted but account does not
+            have permission 
+                                        OR
+            Access Denied for client IP
+                                        OR
+            No appointment reschedule notification settings have been defined in
+            ESF for the <<API Name>> application. Your transaction has not been
+            completed. Please contact support.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: >-
+            Invalid request due to incorrect resource $Resource (where $Resource
+            is the resource call made by the consumer)
+                                     OR
+            Generic Error - Provider was unable to process the request
+                                     OR
+            Activity Timeout Error -  No response received from Provider
+                                     OR
+          schema:
+            $ref: '#/definitions/Error'
+  /workforce-availability-booking:
+    post:
+      operationId: Confirms the booking of the available slots
+      summary: >-
+        This resource gives the consumer the capability to confirm/book an
+        appointment or a commitment from the list of available slots available.
+      description: >
+        This resource gives the consumer the capability to confirm/book an
+        appointment or a commitment from the list of available slots available.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            A header in the format 'Bearer {access_token}' - get the token by
+            using the OAuth API with the scope 'CONSUMEAPPOINTMENT'
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: application/json ; charset= utf-8
+          type: string
+          required: true
+        - name: Request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CARequest'
+      tags:
+        - workforce-availability-booking
+      responses:
+        '200':
+          description: Successful
+          schema:
+            $ref: '#/definitions/CAResponse'
+        '401':
+          description: Invalid or no credentials passed in the request
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: >-
+            Authorization credentials passed and accepted but account does not
+            have permission  OR Access Denied for client IP
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: >-
+            Invalid request due to incorrect resource $Resource (where $Resource
+            is the resource call made by the consumer)
+          schema:
+            $ref: '#/definitions/Error'
+  /workforce-appointment:
+    get:
+      operationId: Gets the details of an appointmemt booked
+      summary: >-
+        This resource describes the details of the workforce
+        appointment/commitment.
+      description: >
+        The action on this resource is taken via query parameters.  A GET action
+        on this resource retrieves the details of the workforce
+        appointment/commitment
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            A header in the format 'Bearer {access_token}' - get the token by
+            using the OAuth API with the scope 'RETRIEVEAPPOINTMENT'
+          type: string
+          required: true
+        - name: taskTroubleTicketId
+          in: query
+          description: >-
+            Is equal to the task Container Id and equal to MOLI Id  for FUL.Is
+            Conditionally Mandatory when the TC_SID is given.Length is 50.
+          type: string
+          required: true
+        - name: taskOrderItemId
+          in: query
+          description: >-
+            The taskOrderItemId identifies the unique Line Item number
+            associated to the task ticket.Length is 22.
+          type: string
+          required: false
+        - name: taskSubcontainerId
+          in: query
+          description: Is equal to Service Instance ID for FUL.Length is 50.
+          type: string
+          required: false
+        - name: telstraAppointmentId
+          in: query
+          description: >-
+            Telstra appointment Id or RAID for Telstra or NBN Appointment
+            Id.Length is 20.
+          type: string
+          required: true
+        - name: telstraCommitmentId
+          in: query
+          description: Telstra Commitment ID or RCID.Length is 20.
+          type: string
+          required: true
+        - name: nbnAppointmentId
+          in: query
+          description: NBN Appointment Id.Length is 20.
+          type: string
+          required: true
+        - name: nbnCommitmentId
+          in: query
+          description: NBN Commitment Id.Length is 20.
+          type: string
+          required: true
+        - name: externalReferenceId
+          in: query
+          description: >-
+            An external reference id defined by the consumer.This field is
+            mandatory for NBN Appointments. The EXTREF_ID is applicable to NBN
+            Appointments if searching for appointments using the external
+            reference id that was used at the time of booking
+             Length is 50.
+          type: string
+          required: true
+        - name: marketSegment
+          in: query
+          description: |-
+            Which market Segment does the request come under.Valid values are
+               Retail
+               Wholesale.Length is 9.
+          type: string
+          required: false
+        - name: returnTaskDetailFlag
+          in: query
+          description: >-
+            How much details are required for Get Task Details. If true, task
+            details are returned. If flase, only dates are returned.
+                 Mandatory for Telstra Appointment.
+                Not required for NBN Appointments.Valid Values -("true","false")
+          type: boolean
+          required: false
+        - name: userId
+          in: query
+          description: |-
+            User ID in the context of the host/consumer system.
+             Note:- For Fulfillment consumers, due to limitations in the provider systems, FWOM would be expecting only values with length upto 8 characters.Length is 12
+          type: string
+          required: true
+        - name: timezoneIndicator
+          in: query
+          description: >-
+            Conditional Mandatory for Telstra Appointment Indicates if all
+            date/time fields are to be returned in "UTC" or "SITE" time in the
+            response for Telstra Appointments.Length is 4
+          type: string
+          required: true
+      tags:
+        - get-workforce-appointment
+      responses:
+        '200':
+          description: Successful
+          schema:
+            $ref: '#/definitions/GRDResponse'
+        '401':
+          description: Invalid or no credentials passed in the request
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: >-
+            Authorization credentials passed and accepted but account does not
+            have permission   OR Access Denied for client IP
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: >-
+            Invalid request due to incorrect resource $Resource (where $Resource
+            is the resource call made by the consumer)
+          schema:
+            $ref: '#/definitions/Error'
+  /commitment-dates-query:
+    post:
+      operationId: Gets the commitment details of an appointment
+      summary: >-
+        This resource gives the consumer the capability to retrieve a Telstra
+        Commitment Date and CSG(Customer Service Guarantee) details for a given
+        location, where a Telstra appointment has not been booked.
+      description: >
+        This resource gives the consumer the capability to retrieve a Telstra
+        Commitment Date and CSG(Customer Service Guarantee) details for a given
+        location, where a Telstra appointment has not been booked.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            A header in the format 'Bearer {access_token}' - get the token by
+            using the OAuth API with the scope 'COMMITAPPOINTMENT'
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: application/json ; charset= utf-8
+          type: string
+          required: true
+        - name: Request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GCDRequest'
+      tags:
+        - commitment-dates-query
+      responses:
+        '200':
+          description: Successful
+          schema:
+            $ref: '#/definitions/GCDResponse'
+        '401':
+          description: Invalid or no credentials passed in the request
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: >-
+            Authorization credentials passed and accepted but account does not
+            have permission  OR Access Denied for client IP
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: >-
+            Invalid request due to incorrect resource $Resource (where $Resource
+            is the resource call made by the consumer)
+          schema:
+            $ref: '#/definitions/Error'
+  /workforce-order-schedule-update:
+    post:
+      operationId: Used for a Re-schedule of appointment scenario
+      summary: >-
+        This resource gives the consumer the capability to update the Scheduling
+        details for Strategic and Legacy products.
+      description: >
+        This resource gives the consumer the capability to update the Scheduling
+        details for Strategic and Legacy products.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            A header in the format 'Bearer {access_token}' - get the token by
+            using the OAuth API with the scope 'UPDATEAPPOINTMENT'
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: application/json ; charset= utf-8
+          type: string
+          required: true
+        - name: Request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UWOSRequest'
+      tags:
+        - workforce-order-schedule-update
+      responses:
+        '200':
+          description: Successful
+          schema:
+            $ref: '#/definitions/UWOSResponse'
+        '401':
+          description: Invalid or no credentials passed in the request
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: >-
+            Authorization credentials passed and accepted but account does not
+            have permission  OR Access Denied for client IP
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: >-
+            Invalid request due to incorrect resource $Resource (where $Resource
+            is the resource call made by the consumer)
+          schema:
+            $ref: '#/definitions/Error'
+securityDefinitions:
+  OAuth2:
+    type: oauth2
+    tokenUrl: /v1/oauth/token
+    flow: application
+    scopes:
+      QUERYAPPOINTMENT: Oauth scope for workforce-availability-query
+      CONSUMEAPPOINTMENT: Oauth scope for workforce-appointment-booking
+      RETRIEVEAPPOINTMENT: Oauth scope for get workforce-appointment
+      COMMITAPPOINTMENT: Oauth scope for commitment-dates-query
+      UPDATEAPPOINTMENT: Oauth scope for workforce-order-schedule-update
+definitions:
+  QWARequest:
+    type: object
+    properties:
+      userId:
+        type: string
+        description: >-
+          User ID in the context of the host/consumer system. Note- For
+          Fulfillment consumers, due to limitations in the provider  systems,
+          FWOM would be expecting only values with length upto 8 characters
+      data:
+        type: object
+        properties:
+          workforceSystem:
+            type: string
+            description: >-
+              This will determine which workforce system the appointment will be
+              booked in. Where not supplied, it will be defaulted to 'TELSTRA'
+          whenCreated:
+            type: string
+            format: date-time
+            description: >-
+              Mandatory for Telstra Appointments Optional for NBN Appointments.
+
+              For Fulfillment, the ApplicationDateTime is the date time stamp
+              within the consumer application when the order was raised. For
+              Assurance, the ApplicationDateTime is the date time stamp when the
+              Trouble Ticket or Fault was reported. Accepted Format
+              YYYY-MM-DDTHH:mm:ss OR YYYY-MM-DDTHH:mm:ssZ OR
+              YYYY-MM-DDTHH:mm:ss.0Z
+          timezone:
+            type: string
+            description: >-
+              Indicates if all date/time fields are in "UTC" or "SITE" time UTC
+              = All dates are using UTC. and there may be different UTC offset
+              at the task level for Multi-location Flag = TRUE. SITE = All dates
+              are using local time. No offsets at the task level. Must be SITE
+              for NBN Appointments
+          timezoneOffset:
+            type: string
+            description: >-
+              This field may contain the actual offset from UTC. Not required
+              for NBN Appointments
+          multipleLocationIndicator:
+            type: boolean
+            description: >-
+              Applicable for telstra appointments where CSA, NSA only
+              to                  perform coordinated testing. Thus Tasks will
+              have different Task Location IDs if this is set to "true" Not
+              required for NBN appointments
+          commonAppointmentSlot:
+            type: boolean
+            description: >-
+              Enforce Common Appointment Slot (CAS). Values - TRUE = All
+              products must have one common APPT timeslot - FALSE = Some of the
+              products will have one common APPT timeslot Mandatory for Telstra
+              Appointments. Not required for NBN Appointments.
+          medicalPriority:
+            type: boolean
+            description: >-
+              Indicator as to whether or not there is a Medical
+              Priority                  related to the Appointment being
+              requested. Mandatory for a Telstra Appointment reschedule.
+              Optional for an NBN Appointment reschedule
+          notes:
+            type: array
+            items:
+              $ref: '#/definitions/QWAnotes'
+          customer:
+            type: object
+            description: >-
+              This list of attributes is optional during reschedule. If
+              not               provided, the values will be obtained from the
+              database where the            previous CA details are stored.
+            properties:
+              id:
+                type: string
+                description: >-
+                  The Customer ID/Code is a unique 10 digit code generated from
+                  the Siebel system (Siebel Internal Customer Identifier) when
+                  customer order is fulfilled. (For Example 901004100) Not
+                  required for NBN Appointments
+              ownershipCode:
+                type: string
+                description: >-
+                  This is used to derive the customer service skill. 
+                  Not                 required if CustomerClass provided Not
+                  required for NBN Appointments.
+              name:
+                type: string
+                description: >-
+                  The name of the customer (person) if different from
+                  the                 Contact details. Otherwise this is the
+                  Contact name. Not required for NBN Appointments
+              tradingName:
+                type: string
+                description: >-
+                  The name of the business if a business customer. Not required
+                  for NBN Appointments.
+              segment:
+                type: string
+                description: >-
+                  Mandatory for Telstra Appointments Not required for NBN
+                  Appointments. The customer segment to which the customer
+                  belongs.
+              address:
+                type: object
+                description: >-
+                  Conditional Mandatory for a Telstra Appointment Optional for a
+                  reschedule NBN Appointment
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      AddressID/ ADBOR ID of the Primary Service Location of
+                      the            Customer.
+                  homesPassedAddressId:
+                    type: string
+                    description: >-
+                      The Homes Passed Address Identifier from the
+                      Wizard                 system
+                  addressType:
+                    type: string
+                    description: >-
+                      Address Type set by EAST via ISL-FUL.Lookup Address. FWOM
+                      will use this value for address type validation. WFMA
+                      calls the Address Type as Location Type.
+                  lines:
+                    type: string
+                    description: Human readable address for the CT’s consumption.
+                  state:
+                    type: string
+                    description: Geographical State where the address belongs to.
+                  geocode:
+                    type: object
+                    properties:
+                      latitude:
+                        type: string
+                        description: >-
+                          The exact geographic location of the entity. For
+                          tasks            it is the place where the task must
+                          be carried out.             For CTs it is their
+                          starting location
+                      longitude:
+                        type: string
+                        description: >-
+                          The exact geographic location of the entity.
+                          For                tasks it is the place where the
+                          task must be carried            out. For CTs it is
+                          their starting location
+                  subAddress:
+                    type: object
+                    properties:
+                      propertyType:
+                        type: string
+                        description: >-
+                          A value from an agree enumeration capturing details
+                          of            the property where the work needs to be
+                          done.
+                  serviceLocation:
+                    type: object
+                    properties:
+                      exchangeServiceArea:
+                        type: string
+                        description: >-
+                          The area in which the CT works or the area to
+                          which             the task belongs. (Currently ESA)
+          contacts:
+            type: array
+            items:
+              $ref: '#/definitions/QWAcontacts'
+          project:
+            type: object
+            properties:
+              subProject:
+                type: string
+                description: >-
+                  The billing information for the work. Mandatory if relevant.
+                  Can be sent in the request by the consumer or filled in by the
+                  CT
+              workBreakdownStructureItem:
+                type: string
+                description: >-
+                  The billing information for the work. Mandatory if relevant.
+                  Can be sent in the request by the consumer or filled in by the
+                  CT
+          order:
+            type: object
+            description: >-
+              Equivalent to MOLI / OLI sturcture. Configured Products is
+              Mandatory for FULFILLMENT
+            properties:
+              id:
+                type: string
+                description: >-
+                  Order Number is the Sales Order Identifier that
+                  gets                    generated by Siebel during the Order
+                  submission.  This will             be a Sales Order Number
+                  that will be maintained within Siebel
+              salesOrderId:
+                type: string
+                description: >-
+                  Unique Order Number is the unique Sales Order Identifier
+                  that            gets generated during the Order submission.
+                  The Unique Order Number will incorporate  the following
+                  variables to establish its uniqueness- Order Number
+                  Retail/Wholesale customer Revision Number
+              orderType:
+                type: string
+                description: >-
+                  The Order Type identifies the current Sales Order Type
+                  and              determines the fulfilment function of the
+                  Sales Order.                  (Mandatory for fulfillment) The
+                  following Sales Order Types             will be used- • New •
+                  Modify • Move • Change ES • Replace SIM • Disconnect
+              demandType:
+                type: string
+                description: >-
+                  NBN Appointment valid values- - Standard Install - Non EU
+                  Jumper Only
+              customer:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Customer Account Code is a unique 10 digit
+                      code                  generated from the Siebel System
+                      Conditional Mandatory for Bigpond MOLI (ADSL, Cable,
+                      Satellite)
+              billingAccount:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Billing Account Number is a unique 13 digit
+                      code                 identifying the billing account in
+                      Siebel, maintained only            in Siebel (Siebel
+                      Internal Billing account identifier). orderItems
+              orderItems:
+                type: array
+                description: >-
+                  Product at the MOLI level All attributes described under the
+                  MOLI level that are Madnatory ARE NOT mandatory at the OLI
+                  level.
+                items:
+                  $ref: '#/definitions/QWAorderitems'
+          troubleTicket:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique Ticket ID in the Ticketing system
+              impact:
+                type: string
+                description: Assurance - Fault Details
+              targetResolutionDate:
+                type: string
+                format: date-time
+                description: >-
+                  Customer Required Date. This is the date that the customer
+                  requested that the Appointment be made
+              requiredCompletionDate:
+                type: string
+                format: date-time
+                description: >-
+                  Obligatory Completion Date The date by which Telstra has
+                  agreed (internally or regulatory) that under normal
+                  circumstances we must deliver/fix the service. It should not
+                  be altered by MSD. MandComplDateTime for legacy
+              serviceLevelAgreement:
+                type: string
+                description: >-
+                  The service level that WFM must attempt to meet for
+                  this                 customer’s jobs. Based on things like
+                  SLAs, CSG, etc. This field will be defaulted by CCB EAI for
+                  Siebel CSA to 'Standard'.
+              notes:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAtroubleticketnotes'
+              reporting:
+                type: object
+                description: >-
+                  Aggregated Clearance codes will be sent by WFMA in which
+                  each            aggregated Clearance Code will consist of a 5
+                  character string            where each character represents
+                  each of the 5 Clearance Code             Vaules. The first
+                  aggregated Clearance code is the one which restored the
+                  service
+                properties:
+                  whenCreated:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the date and time associated with the code
+                      (this            will be used to find out which is the
+                      latest code).                  FaultCodeValue. e.g -
+                      2007-10-10T17:00:00Z in UTC
+                  sourceCode:
+                    type: string
+                    description: >-
+                      Fault Details. Source of fault reporter. E.g.
+                      Customer,                Customer Representative, Telstra
+                      etc
+                  troubleCode:
+                    type: string
+                    description: Fault Details. Trouble code of the fault.
+              tests:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAtroubletickettests'
+              resolution:
+                type: object
+                properties:
+                  whenCreated:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the date and time associated with the
+                      code                 (this will be used to find out which
+                      is the latest code)             . FaultCodeValue. e.g -
+                      2007-10-10T17:00:00Z in UTC
+                  whenOccurred:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the Date and time the service was restored. e.g-
+                      2007-10-10T17:00:00Z in UTC
+                  resolved:
+                    type: string
+                    description: >-
+                      This field indicates whether the clearance code
+                      value                corresponds to the action that has
+                      restored the service. If ITAM is the TT provider system
+                      then only Actual or No will be populated, therefore
+                      Temporary is not received by any consumer. Note - *
+                      indicates that this field will be mandatory in case the
+                      codeType“ is "Clearance"
+              impactedService:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAtroubleticketimpactedService'
+          appointment:
+            type: object
+            description: >-
+              For all domains, Appointment Class - Business Rule -- a
+              QWA                  Request can have zero or one appointment. For
+              Assurance, Commitment Class - Business Rule -- a QWA Request can
+              have zero or many commitments. For Fulfillment, Commitment Class -
+              Business Rule -- a QWA Request can have zero or one commitment.
+
+              FULFILLMENT can only send either an appointment OR a commitment
+              not both for Telstra Appointments.
+
+              FULFILLMENT can only send only an appointment for NBN Appointments
+
+              Appointment / Commitment is mandatory for FULFILLMENT - only
+              Earliest Start Date and Requested Due Date Appointment /
+              Commitment is mandatory for ASSURANCE - ALL Appointment /
+              Commitment is mandatory for Reschedule Scenario
+            properties:
+              id:
+                type: string
+                description: >-
+                  Appmt Id refering to all the tasks (appointments) within
+                  this            request. Generated by FWOM for Telstra
+                  Appointments Cmmt Id refering to all the tasks (commitments)
+                  within this request. Generated by FWOM. This is mandatory for
+                  the Reschedule Scenario
+              appointmentType:
+                type: string
+                description: The value must be - APPT CMMT
+              reasonCode:
+                type: string
+                description: >-
+                  Reason code for rescheduling the appmt/ cmmt This is mandatory
+                  for the Reschedule Scenario.
+              timePeriod:
+                type: object
+                properties:
+                  startDateTime:
+                    type: string
+                    format: date-time
+                    description: >-
+                      The date before which appointment/commitment work
+                      cannot             commence.
+                  endDateTime:
+                    type: string
+                    format: date-time
+                    description: >-
+                      The date by which the customer desires the
+                      appointment               /commitment to have commenced.
+                      Commitment - Inbound - The date by which the customer
+                      desires the service to be delivered/fixed. Outbound - Date
+                      committed to by WFM. May be outside of OCD due to lack of
+                      resource, or mitigated by MSD.
+
+                      Where an appointment requested due date is provided, it s
+                      advised that the complete search window should not exceed
+                      10 business days so as to avoid adverse impacts to
+                      calendar search performance.
+              slots:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAappointmentslots'
+              tasks:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAappointmenttasks'
+  QWAnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Notes about the customer Not required for NBN Appointments.
+  QWAcontacts:
+    type: object
+    properties:
+      contactType:
+        type: string
+        description: >-
+          Primary/Secondary/Site Primary - Customer's first point of contact
+          Secondary - Alternative contact Site - Contact details of the Site
+          location, if customer is not at        the same location.
+      name:
+        type: string
+        description: Format is  <First Name> +" "+ <Surname>
+      number:
+        type: string
+        description: Phone Number
+  QWAorderitems:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          The Integration ID is a unique ID generated to identify the
+          specific             MOLI/OLI throughout its entire lifecycle. It does
+          not change once created.This is the MOLI / OLI ID. CCB-RCRM SOC needs
+          to a. pass the CCB “ORIGINAL INTEGRATION ID” into the FWOM
+          “Integration ID” if the CCB “ORIGINAL INTEGRATION ID” is NOT NULL
+          (this obviously occurs after the first initialisation of a MOLI / OLI)
+          or b. pass the CCB “INTEGRATION ID” into the FWOM “Integration ID” if
+          the CCB “ORIGINAL INTEGRATION ID” is NULL (this obviously occurs at
+          the time of the first initialisation of a MOLI / OLI) BP-BPS will
+          supply the Sales Channel Order Item ID into this field instead of the
+          Siebel MOLI ID
+      number:
+        type: string
+        description: >-
+          The Line Item Number identifies the MOLI / OLI. • All MOLI & OLIs will
+          have LineItemNumber = 1, 2, 3 …N for the 1st, 2nd, 3rd…Nth item
+      action:
+        type: string
+        description: >-
+          This field represents the Action Code for each MOLI (or OLI).  
+          And             the possible values are defined as follows:- ● Add ●
+          Modify ● Suspend ● Resume ● Disconnect • - (dash) •Move-Add (MOC Only)
+          •Move-Delete (MOC Only) •Transition-Add(MOC Only)
+          •Transition-Delete(MOC Only) Refer to the Allowable Order Type matrix
+          for the list of allowable action codes
+      service:
+        type: object
+        properties:
+          number:
+            type: string
+            description: >-
+              Determines the Service Identifier used by Siebel.  All
+              possible              values could represent the following
+              entities - ● FNN ● Big Pond ID ● SIM Serial Number Etc. If SIM
+              Serial Number is provided and is numeric with a minimum length of
+              9 and a maximum length of 13, it is converted to the 20 digit
+              ICCID by the MCO service when the mobile service is activated or
+              when the SIM number has changed. Determines the Service Identifier
+              used by Siebel.  All possible values could represent the following
+              entities - • FNN - Full National Number for CONNECT appointments &
+              START commitments • Big Pond ID - BigPond user name including the
+              domain realm. E.g. tony.jones@bigpond.com for BPS appointments.
+              Mandatory for relocations of existing BigPond customers
+          serviceType:
+            type: string
+            description: >-
+              Indicates the type of Service Offering. Eg. • Broadband ADSL •
+              Broadband Cable • Broadband Velocity • PSTN • Calling •
+              Subscription TV • Internet
+          customerFacingService:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  The Fulfillment Reference ID is the unique identifier
+                  for               each of the line items defined as part of
+                  the CFS Offering. It is a Mandatory field to be sent for MOC
+                  orders
+              name:
+                type: string
+                description: >-
+                  The Fulfillment Reference Name identifies each of the
+                  line               items defined as part of the CFS
+                  Offering.It is a Mandatory             field to be sent for
+                  MOC orders
+          product:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  Siebel Internal Product Identifier that identifies the
+                  Product            /Service represented by the OLI.
+              name:
+                type: string
+                description: >-
+                  The Product identifies the respective product that
+                  is                    configured in Siebel.  Sourced from
+                  Tribold.
+              number:
+                type: string
+                description: >-
+                  The Part Number is the part number associated with
+                  the                   respective Product
+              notes:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAproductnotes'
+              characteristics:
+                type: object
+                properties:
+                  welcomePackRequired:
+                    type: string
+                    description: >-
+                      This flag indicates the existence of collateral/literature
+                      (Product Welcome Packs) required to be sent to the
+                      customer.   Possible values are - • Y – Welcome Pack is
+                      required to be sent. • N – Welcome Pack is not required to
+                      be sent
+                  serviceLevelAgreement:
+                    type: string
+                    description: >-
+                      The service level that WFM must attempt to meet for
+                      this             customer’s jobs. Based on things like
+                      SLAs, CSG, etc.
+                  shippingRequired:
+                    type: string
+                    description: >-
+                      This flag determines whether the product represented
+                      by              the OLI is required to be shipped to the
+                      ship to Address.            Possible values are - • Y –
+                      Product must be Shipped • N – Product must not be Shipped
+                  provisionable:
+                    type: string
+                    description: >-
+                      This flag determines whether the OLI is
+                      provisionable.             Possible values are - • Y –
+                      Product is Provisionable • N – Product is not
+                      Provisionable
+                  transferType:
+                    type: string
+                    description: >-
+                      Transfer Type indicating the type of transfer on an
+                      order            (if applicable). List of values - Churn -
+                      Churn In Transition - Indicates a Churn-In in Transition
+                  appointmentOverrideIndicator:
+                    type: string
+                    description: >-
+                      In an ‘appmt override’ scenario, the task list is
+                      not                received from SQ, but it is overwritten
+                      by the CCB                   operator. In this case a new
+                      task (and Job) needs to be              generated in FWOM,
+                      along with all required task and job             
+                      attributes
+                  silentLineIndicator:
+                    type: boolean
+                    description: >-
+                      Flag indicating whether the phone line is silent (when
+                      the            customer makes calls, the phone nbr is not
+                      displayed to              callee.) PSTN only
+                  pathId:
+                    type: string
+                    description: Path ID for Products that need Path ID
+                  inplaceNationalNumber:
+                    type: string
+                    description: >-
+                      The National Number associated to the Path identified
+                      from            the input where available. This value is
+                      returned from               ServiceabilityLevel2 in MSQ
+                      Format -  <2 digit local are code><number>
+                  firstLineIndicator:
+                    type: string
+                    description: >-
+                      Answer to the question if this is the first line into
+                      the            customer premises. Treat as Boolean -
+                      ("Y","N")
+              attributes:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAproductattributes'
+          appointments:
+            type: array
+            items:
+              $ref: '#/definitions/QWAorderitemsappointments'
+          orderItems:
+            type: array
+            items:
+              $ref: '#/definitions/QWAorderitemsorderitems'
+  QWAtroubleticketnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Notes at Task Container Level
+  QWAtroubletickettests:
+    type: object
+    properties:
+      whenCreated:
+        type: string
+        format: date-time
+        description: >-
+          Indicates the date and time associated with the code (this will
+          be               used to find out which is the latest code) .
+          FaultCodeValue. e.g - 2007-10-10T17:00:00Z in UTC
+      conditionCode:
+        type: string
+        description: Fault Details
+      diagnosisCode:
+        type: string
+        description: Fault Details
+  QWAtroubleticketimpactedService:
+    type: object
+    properties:
+      serviceType:
+        type: string
+        description: List of Values - “PSTN”
+      number:
+        type: string
+        description: >-
+          The National Number associated to the Path identified from the
+          input             where available. This value is returned from
+          ServiceabilityLevel2 in             MSQ Format - <2 digit local are
+          code><number>
+      characteristics:
+        type: object
+        properties:
+          silentLineIndicator:
+            type: boolean
+            description: >-
+              Flag indicating whether the phone line is silent (when the
+              customer            makes calls, the phone nbr is not displayed to
+              callee.) PSTN only.
+  QWAappointmentslots:
+    type: object
+    properties:
+      slotType:
+        type: string
+        description: >-
+          Ensures that appointment time slots being searched for/confirmed
+          are             restricted to certain periods (ie. AM or PM). Valid
+          values - AM PM If not supplied then all slots will be returned (both
+          AM and PM)
+      serviceTypeAvailability:
+        type: object
+        properties:
+          serviceabilityClass:
+            type: string
+            description: >-
+              The serviceability class provides a finer grained definition
+              of              the service qualification result. It provides
+              information                    regarding the serviceability of the
+              primary technology (fibre,               wireless, satellite,
+              FTTB, FTTN) at the location. Valid Values - 0 - 13 0 - Planned
+              Fibre footprint 1 - Serviceable by Fibre, no drop or NTD in place
+              2 - Serviceable by Fibre, drop in place, no NTD in place 3 -
+              Serviceable by Fibre, drop and NTD in place 4 - Planned Wireless
+              footprint 5 - Serviceable by Wireless, CPE not installed 6 -
+              Serviceable by Wireless, CPE installed 7 - Planned to be serviced
+              by Interim Satellite 8 - Serviceable by Interim Satellite, VSAT
+              Terminal and CPE not   installed 9 - Serviceable by Interim
+              Satellite, VSAT Terminal and CPE installed 10 - Planned to be
+              serviceable by Copper 11 - Servicable by copper, active node
+              present 12 - Servicable by copper, jumpering is required 13 -
+              Servicable by copper, infrastructure in place
+  QWAappointmenttasks:
+    type: object
+    properties:
+      id:
+        type: string
+      taskType:
+        type: string
+        description: '0 - 13,20-24'
+      action:
+        type: string
+        description: >-
+          0 - Planned to be serviced by Fibre in the future (boundary
+          status                  isn't 'In Service' yet)
+      forService:
+        type: object
+        properties:
+          serviceType:
+            type: string
+      characteristics:
+        type: object
+        properties:
+          dispatchIndicator:
+            type: boolean
+            description: 'Serviceable by Fibre, drop and NTD in place'
+          recallIndicator:
+            type: boolean
+            description: 'Serviceable by Fibre, no drop or NTD in place'
+          timezoneOffset:
+            type: string
+            description: 'Serviceable by Fibre, drop and NTD in place'
+      notes:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtasksnotes'
+      technicians:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskstechnicians'
+      contacts:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskscontacts'
+      taskRelationships:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskstaskRelationships'
+      subTasks:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskssubTasks'
+  QWAproductnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Product Notes which will be useful for CT
+  QWAproductattributes:
+    type: object
+    properties:
+      action:
+        type: string
+        description: >-
+          This field represents the Action Code for the List of Attributes
+          for             the current MOLI (or OLI).  The following possible and
+          the possible              values are defined as follows- • Add •
+          Modify • Delete
+      name:
+        type: string
+        description: >-
+          Represents the Name of the Name/Value Attribute Pair Job Workforce
+          Type Remarks to CT
+      value:
+        type: string
+        description: Represents the Value of the Name/Value Attribute Pair
+      previousValue:
+        type: string
+        description: Represents the previous value of  the Name/Value Attribute Pair
+      description:
+        type: string
+        description: Represents the description
+  QWAorderitemsappointments:
+    type: object
+    properties:
+      appointmentType:
+        type: string
+        description: >-
+          The type of appointment / commitment that is required for this MOLI
+          or            Product. "APPT" = appointment "CMMT" = commitment
+      requestedCompletionDate:
+        type: string
+        description: >-
+          Customer Required Date. This is the date that the customer requested
+          that the Appointment be made
+      requiredCompletionDate:
+        type: string
+        format: date-time
+        description: >-
+          Obligatory Completion Date The date by which Telstra has agreed
+          (internally or regulatory) that under normal circumstances we must
+          deliver/fix the service. It should not be altered by Mass Service
+          Disruption (MSD). MandComplDateTime for legacy
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Classification of the appointment to be booked in workforce systems
+          Expected values - • 'Accelerated' - Appointment with high priority in
+          workforce calendar • 'Standard' – Appointment with normal priority in
+          workforce calendar
+  QWAorderitemsorderitems:
+    type: object
+    properties: {}
+    description: >-
+      OLIs in the SID are represented by the self-referencing relationship
+      of              BusinessInteractionItemReferences of type
+      CustomerOrderItem. OLI Starting Path - order/orderItems/orderItems/.. Any
+      further levels of sub-OLIs will have path of
+      order/orderItems/orderItems/orderItems/.. This OLI/Sub-OLI relationship
+      will go down till three levels as ESF-BC can check the OLI/sub-OLIs till
+      third level due to  limitation in converting the further levels of
+      OLI/sub-OLIs.
+  QWAtasksnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Planned to be serviced by Wireless
+  QWAtaskstechnicians:
+    type: object
+    properties:
+      technicianType:
+        type: string
+        description: The valid values are - Preferred Excluded Required
+      id:
+        type: string
+        description: >-
+          For Preferred CT - Serviceable by Wireless, CPE not installed
+
+          For Excluded CT - Serviceable by Wireless, CPE installed
+
+          For Required CT - lanned to be serviced by Satellite (post LTSS
+          launch)
+      address:
+        type: object
+        description: Optional for Assurance in the Reschedule Scenario
+        properties:
+          id:
+            type: string
+            description: The ADBoR or CPR2 key for the exact location of the Task Address.
+          addressType:
+            type: string
+            description: >-
+              Address Type set by EAST via ISL-FUL.Lookup Address. FWOM will use
+              this value for address type validation. WFMA calls the Address
+              Type as Location Type.
+          lines:
+            type: string
+            description: Human readable address for the CT’s consumption
+          state:
+            type: string
+            description: Geographical State where the address belongs to.
+          geocode:
+            type: object
+            properties:
+              latitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity. For tasks it is
+                  the place where the task must be carried out. For CTs it is
+                  their starting location.
+              longitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity. For tasks it is
+                  the place where the task must be carried out. For CTs it is
+                  their starting location.
+          subAddress:
+            type: object
+            properties:
+              propertyType:
+                type: string
+                description: >-
+                  A value from an agree enumeration capturing details of
+                  the               property where the work needs to be done.
+          serviceLocation:
+            type: object
+            properties:
+              exchangeServiceArea:
+                type: string
+                description: >-
+                  The area in which the CT works or the area to which the
+                  task             belongs. (Currently ESA)
+  QWAtaskscontacts:
+    type: object
+    description: >-
+      Contact Name / Number - Needs to be a repeating group of 1-3 (upto
+      3                 customer contact details) There should be a relationship
+      between contact name and contact number so that the 3 pairs can be
+      identified as sets. Required at both request and task levels. If it’s a
+      multi location request, each loc needs its own set of 3. If only request
+      level is set, they will be used at task level.
+    properties:
+      contactType:
+        type: string
+        description: >-
+          Primary/Secondary/Site Primary  - Customer's first point of contact
+          Secondary - Alternative contact Site -  Contact details of the Site
+          location, if customer is not at the same location.
+      name:
+        type: string
+        description: Format - <First Name>+" "+<Surname>
+      number:
+        type: string
+        description: Phone Number
+  QWAtaskstaskRelationships:
+    type: object
+    properties:
+      relationshipType:
+        type: string
+        description: 'Dependency type between tasks. E.g. Start to Start, Finish to Start'
+      tasks:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtasksRelationshipstasks'
+  QWAtaskssubTasks:
+    type: object
+    description: >-
+      Job is mandatory for ASSURANCE in the normal scenario Job is optional for
+      ASSURANCE in the reschedule scenario
+    properties:
+      id:
+        type: string
+        description: >-
+          An ID that is relevant to the Consumer. This is not used
+          functionally           within WFM Cramer's id of the job
+      taskType:
+        type: string
+        description: >-
+          (Network Location Type) A value from an agreed enumeration capturing
+          the network location. This field is used for Task Aggregation and Task
+          Matching in FWOM.
+      action:
+        type: string
+        description: >-
+          Ful - install, CSA - repair. A value from an agree
+          enumeration                   capturing the action that needs to be
+          done. (Install, Fix, ...) Indicates the action associated with the
+          work that needs to be done. Examples are “Install”, “Investigate” etc.
+          This field derives skill and EWT in WFM.
+      description:
+        type: string
+        description: >-
+          Short description of the job. E.g. Wired modem, HFC Lead in Aerial Can
+          be used to provide a generic description for the job if need be. This
+          can be used by the CT, if populated, to understand the job.
+      notes:
+        type: array
+        items:
+          $ref: '#/definitions/QWAsubTasksnotes'
+      forService:
+        type: object
+        properties:
+          serviceType:
+            type: string
+            description: >-
+              Defines the service type of the job. This field is currently
+              only            used by the Fulfilment domain and is the same as
+              CFS Spec Names.             Examples are “c_Cable_Access” etc.
+              This field is mandatory for Jobs created by Crammer LI. This field
+              will be used for Task Aggregation and Task Matching in the
+              Fulfilment space (within FWOM).
+      forResource:
+        type: object
+        properties:
+          resourceType:
+            type: string
+            description: >-
+              Indicates the type of the resource that the Job is associated
+              to.            This field derives skill and Estimated Work Time
+              (EWT) in WFM
+          technologyType:
+            type: string
+            description: >-
+              A value from an agree enumeration capturing the technology
+              in               which the work needs to be done. (Copper, Fibre,
+              Satellite, …) Indicates the technology type associated with the
+              resource the job is associated to. Examples are “HFC”, “Satellite”
+              etc. This field derives skill and EWT in WFM.
+      address:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Location of the job The ADBoR or CPR2 key for the exact location
+              of the entity. For customer premises, Address ID is required.
+              ADBoR / Address ID for the Job. This field is mandatory for Jobs
+              created by Crammer LI. For consumers that provide Tasks and Jobs,
+              the task Address Details will be sufficient and will be inherited
+              by the Job. This field will be used for Task Aggregation and Task
+              Matching in the Fulfilment space (within FWOM).
+          addressType:
+            type: string
+            description: >-
+              Address Type set by EAST via ISL-FUL.Lookup Address. FWOM will use
+              this value for address type validation. WFMA calls the Address
+              Type as Location Type. For consumers that provide Tasks and Jobs,
+              the task Address Details will be sufficient.
+          lines:
+            type: string
+            description: >-
+              Human readable address for the CT’s consumption. For consumers
+              that provide Tasks and Jobs, the task Address Details will be
+              sufficient.
+          state:
+            type: string
+            description: Geographical State where the address belongs to.
+          geocode:
+            type: object
+            properties:
+              latitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity. For tasks it
+                  is              the place where the task must be carried out.
+                  For CTs it is               their starting location.For
+                  consumers that provide Tasks              and Jobs, the task
+                  Address Details will be sufficient.
+              longitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity. For tasks it is
+                  the place where the task must be carried out. For CTs it is
+                  their starting location. For consumers that provide Tasks and
+                  Jobs, the task Address Details will be sufficient
+          subAddress:
+            type: object
+            properties:
+              propertyType:
+                type: string
+                description: >-
+                  A value from an agree enumeration capturing details of the
+                  property where the work needs to be done. For consumers that
+                  provide Tasks and Jobs, the task Address Details will be
+                  sufficient
+          serviceLocation:
+            type: object
+            properties:
+              exchangeServiceArea:
+                type: string
+                description: >-
+                  The area in which the CT works or the area to which the
+                  task            belongs. (Currently ESA)
+  QWAtasksRelationshipstasks:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Specifies the task upon which this task is dependent.
+  QWAsubTasksnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: >-
+          Notes about the job Can be used to provide further instructions to a
+          CT on a job if need be.
+  QWAResponse:
+    type: object
+    properties:
+      timestamp:
+        type: string
+        format: date-time
+        description: >-
+          The time at which the Query Availability operation was called.
+          Returned in QWA. Required in CA for a Telstra Appointment eg-
+          2009-11-26T02:05:34.223Z
+      data:
+        type: object
+        properties:
+          commonAppointmentSlotNotes:
+            type: string
+            description: >-
+              Common Appointment Slot Notes. Notes about the
+              products/tasks               that were requested for CAS in a
+              Normal scenario. This is not               applicable for
+              reschedule scenarios
+          multipleTruckrollIndicator:
+            type: boolean
+            description: >-
+              Values in ("true","false") Only if Single Appmt is not successful.
+              Whether the request is part of multiple truck roll.
+          dateChangeReasonCodeId:
+            type: string
+            description: >-
+              Returned if dates changed. The first occurrence of Date Change
+              Reason Code ID as returned by either Legacy WFM or Strategic WFM
+              systems. Returned if dates changed due to high work load or MSDs
+              created in CONNECT
+          confirmAppointmentRequired:
+            type: boolean
+            description: >-
+              Flag indicating whether CA needs to be triggered to confirm
+              the             booking. Values in ("true","false") Only false for
+              a Legacy exchange Commitment (ie PSTN and Bigpond ADSL) or Legacy
+              Customer Facing Appointment (ie PSTN, PayTV, BigPond Cable, and
+              BigPond ADSL)
+          customer:
+            type: object
+            description: >-
+              Conditional Mandatory for FULFILLMENT (Telstra Appointments)
+              and            CSA.Optional for NBN Appointments This list of
+              attributes is optional during reschdule. If not provided, the
+              values will be obtained from the database where the previous CA
+              details are stored
+            properties:
+              address:
+                type: string
+                description: Customer Address
+              serviceLocation:
+                type: object
+                properties:
+                  remoteLocationStatus:
+                    type: string
+                    description: >-
+                      Remote Location Flag.  It represents the status of the
+                      service being installed. List  of values include - 1. 
+                      Remote Location 2.  Unspecified
+          order:
+            type: object
+            description: >-
+              Equivalent to MOLI / OLI sturcture. Configured Products is
+              Mandatory for FULFILLMENT (Telstra Appointments) Optional for NBN
+              Appointments
+            properties:
+              id:
+                type: string
+                description: >-
+                  Order Number is the Sales Order Identifier that
+                  gets                    generated by Siebel during the Order
+                  submission.  This will             be a Sales Order Number
+                  that will be maintained within Siebel
+              orderItems:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAresponseorderItems'
+          appointment:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  Appmt Id refering to all the tasks (appointments) within this
+                  request. Generated by FWOM  for Telstra Appointments. Cmmt Id
+                  refering to all the tasks (commitments) within this request.
+                  Generated by FWOM.
+              appointmentType:
+                type: string
+                description: APPT|CMMT (Appointment or Commitment)
+              subStatuses:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAresponsesubStatuses'
+              estimatedTime:
+                type: string
+                description: >-
+                  The estimated work time of the appointment/ cmmt work
+                  in                seconds.
+              timePeriod:
+                type: object
+                properties:
+                  startDateTime:
+                    type: string
+                    description: >-
+                      Mandatory for Telstra Appointment Optional for NBN
+                      Appointment The date before which appointment/commitment
+                      work cannot commence. In the QWA Response, any changes in
+                      the appointment/commitment ESD will be sent in response if
+                      date is changed due to MSD/ LSD etc.
+                  endDateTime:
+                    type: string
+                    description: >-
+                      Mandatory for Telstra Appointment Optional for NBN
+                      Appointment The date by which the customer desires the
+                      appointment/commitment to have commenced. Commitment -
+                      Inbound - The date by which the customer desires the
+                      service to be delivered/fixed. Outbound - Date committed
+                      to be WFM. May be outside of OCD due to lack of resource,
+                      or mitigated by MSD. In the QWA Response, any changes in
+                      the appointment/commitment RDD will be sent in response if
+                      date is changed due to MSD/ LSD etc
+              slots:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAResponseslots'
+              workforce:
+                type: object
+                properties: {}
+              serviceProvider:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      Workforce doing the work related to this closure code
+                      status change Valid Values - NBN
+                  organisationalUnit:
+                    type: string
+                    description: >-
+                      Mandatory when Appt Type = “FIELD”. Workforce
+                      Enterprise            Unit Description
+  QWAresponseorderItems:
+    type: object
+    description: >-
+      Product at the MOLI level All attributes described under the MOLI level
+      that are Madnatory ARE NOT mandatory at the OLI level.
+    properties:
+      id:
+        type: string
+        description: >-
+          The Integration ID is a unique ID generated to identify the
+          specific            MOLI/OLI throughout its entire lifecycle. It does
+          not change once created. This is the MOLI / OLI ID. CCB-RCRM SOC needs
+          to a. pass the CCB “ORIGINAL INTEGRATION ID” into the FWOM
+          “Integration ID” if the CCB “ORIGINAL INTEGRATION ID” is NOT NULL
+          (this obviously occurs after the first initialisation of a MOLI / OLI)
+          or b. pass the CCB “INTEGRATION ID” into the FWOM “Integration ID” if
+          the CCB “ORIGINAL INTEGRATION ID” is NULL (this obviously occurs at
+          the time of the first initialisation of a MOLI / OLI) BP-BPS will
+          supply the Sales Channel Order Item ID into this field instead of the
+          Siebel MOLI ID
+      workforceIndicator:
+        type: string
+        description: Values are - "Foxtel" "TELSTRA"
+      requiredCompletionDate:
+        type: string
+        description: >-
+          Obligatory Completion Date The date by which Telstra has agreed
+          (internally or regulatory) that under normal circimstances we must
+          deliver/fix the service. It should not be altered by Mass Service
+          Disruption (MSD). MandComplDateTime for legacy
+      appointments:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Appmt Id refering to all the tasks (appointments) within
+              this             request. Generated by FWOM. Cmmt Id refering to
+              all the tasks (commitments) within this request. Generated by
+              FWOM. If EnforceCASFlag = True, then consumer to use the RAID /
+              RCID at the response level.
+          appointmentType:
+            type: string
+            description: APPT|CMMT(Possible Values).Appointment or Commitment.
+  QWAresponsesubStatuses:
+    type: object
+    properties:
+      statusType:
+        type: string
+        description: Appointment Closure | Enterprise Closure (Possible Values)
+      status:
+        type: string
+        description: >-
+          Appointment Closure - The original workforce closure code Closure
+          codes provide additional information to the Access Seeker relevant to
+          the status of the Appointment
+
+          Enterprise Closure Code - Standardised Closure Code indicating the
+          state the appointment will be moving to.
+
+          Valid values - BOOKED BOOKED/INCOMPLETE CANCELLED COMPLETE INCOMPLETE
+          IN PROGRESS RESERVED UNKNOWN
+      statusReason:
+        type: string
+        description: >-
+          The reason was for the change in status. Valid values -
+          ADDRESS-NOT-SERVICEABLE APPT-EXTENDED CANCEL CONTACT-UPDATED DECLINED
+          DELAY DELAY-CLEARED EXPIRED LATE-DAY-VISIT MISSED-APPT RESCHEDULE
+          TECH-ON-SITE UNKNOWN
+      statusDescription:
+        type: string
+        description: This contains the closure code description
+      statusActor:
+        type: string
+        description: >-
+          The party that triggered the closure code change (ie. NBN,
+          Access               Seeker etc...) Valid values - CUSTOMER NBN
+  QWAResponseslots:
+    type: object
+    description: >-
+      Commitment - Available Commitment Time Slot. Only one returned.
+      Appointment- Available Appointment Time Slots. Repeated 0 to many times.
+    properties:
+      slotType:
+        type: string
+        description: >-
+          Timeslot profile for which the appointment is to be made. E.g. AM (for
+          morning slots), PM (for afternoon slots). Used in legacy Telstra
+          Appointments and for NBN Appointments .
+
+          Enumerated Values in MA are - MR LE PM AM
+      dueDate:
+        type: string
+        format: date-time
+        description: >-
+          Commitment - Date committed to be WFM. May be outside of OCD due
+          to                          lack of resource, or mitigated by MSD.
+          YYYY-MM-DDTHH:mm:ss.0Z
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Mandatory for NBN Appointments
+
+          Expected values - • 'Accelerated' - Appointment slot with high
+          priority in workforce calendar • 'Standard’ – Appointment slot with
+          normal priority in workforce calendar • 'PriorityAssist' - Appointment
+          slot which is Priority Assist in workforce calendar •
+          'OutsideSLAWindow' - Appointment slot that is Outside the SLA Window
+          for the requested request slot Default Values - * 'Unknown' (ISL FWOM
+          will send default value incase if NBN is not sending any
+          appointmentLeadTime value)
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            format: date-time
+            description: >-
+              Appointment - Returned Time Slot. The start of the period during
+              which the CT needs to arrive at the customer’s premises.
+              Commitment - Telstra Commitment Date (TCD) - Start Date Time
+          startTimezoneOffset:
+            type: string
+            description: >-
+              This field may contain the actual offset from UTC. Mandatory for 
+              NBN Appointments Format is [+|-][hh]:[mm]
+          endDateTime:
+            type: string
+            format: date-time
+            description: >-
+              Appointment - (Output) The end of the period during which the CT
+              needs to arrive at the customer’s premises. Commitment - Telstra
+              Commitment Date (TCD) - End Date Time YYYY-MM-DDTHH:mm:ss.0Z
+          endTimezoneOffset:
+            type: string
+            description: >-
+              This field may contain the actual offset from UTC. Mandatory for 
+              NBN Appointments Format is [+|-][hh]:[mm]
+          telstraCommit:
+            type: object
+            properties:
+              startDateTime:
+                type: string
+                format: date-time
+                description: >-
+                  Telstra Commitment Date (TCD) - Start Date Time
+                  YYYY-MM-DDTHH:mm:ss.0Z Optional ONLY for Legacy BigPond CABLE
+                  and Legacy PayTV order AND NBN Appointments
+              endDateTime:
+                type: string
+                format: date-time
+                description: >-
+                  Telstra Commitment Date (TCD) - End Date Time Optional only
+                  for Legacy BigPond Cable and Foxtel requests.
+                  YYYY-MM-DDTHH:mm:ss.0Z Optional ONLY for Legacy BigPond CABLE
+                  and Legacy PayTV orders AND NBN Appointments
+  CARequest:
+    type: object
+    properties:
+      userId:
+        type: string
+        description: >-
+          User ID in the context of the host/consumer system.Note -
+          For                    Fulfillment consumers, due to limitations in
+          the provider systems,              FWOM would be expecting only values
+          with length upto 8 characters
+      data:
+        type: object
+        properties:
+          workforceSystem:
+            type: string
+            description: >-
+              This will determine which workforce system the appointment
+              will             be booked in.Where not supplied, it will be
+              defaulted to                    'TELSTRA'
+          whenCreated:
+            type: string
+            format: date-time
+            description: >-
+              Mandatory for Telstra Appointments Optional for NBN Appointments.
+              For Fulfillment, the ApplicationDateTime is the date time stamp
+              within the consumer application when the order was raised. For
+              Assurance, the ApplicationDateTime is the date time stamp when the
+              Trouble Ticket or Fault was reported
+          workforceAvailabilityQueryTimestamp:
+            type: string
+            format: date-time
+            description: >-
+              The time at which the Query Availability operation was called.
+              Returned in QWA. Required in CA eg -  2009-11-26T02:05:34.223Z
+              Mandatory for Telstra Appointments Not required for NBN
+              Appointments
+          timezone:
+            type: string
+            description: >-
+              Indicates if all date/time fields are in "UTC" or "SITE" time UTC
+              = All dates are using UTC. and there may be different UTC offset
+              at the task level for Multi-location Flag = TRUE. SITE = All dates
+              are using local time. No offsets at the task level. Must be SITE
+              for NBN Appointments
+          timezoneOffset:
+            type: string
+            description: >-
+              This field may contain the actual offset from UTC. Not required
+              for NBN Appointments
+          multipleLocationIndicator:
+            type: boolean
+            description: >-
+              Applicable for telstra appointments where CSA, NSA only
+              to                  perform coordinated testing. Thus Tasks will
+              have different Task Location IDs if this is set to "true" Not
+              required for NBN appointments
+          medicalPriority:
+            type: boolean
+            description: >-
+              Indicator as to whether or not there is a Medical
+              Priority                 related to the PSTN requested Optional
+              for NBN Appointments reschedule Mandatory for Telstra Appointment
+              reschedule
+          multipleTruckrollIndicator:
+            type: boolean
+            description: >-
+              Only if Single Appmt is not successful. Whether the request is
+              part of multiple truck roll. Mandatory for Telstra Appointments
+              Optional for NBN Appointments
+          passthroughData:
+            type: string
+            description: >-
+              ITAM will be the only consumer using this for TR2.3. It is
+              used             to store the complete pass through data that will
+              be passed from            SIIAM to ITAM through ISL-ASSURE. This
+              is required for the WFM              integration of ITAM. Message
+              context, and should use the XML data type of “any” (see SOAP Body
+              element).
+          notes:
+            type: array
+            items:
+              $ref: '#/definitions/CARequestnotes'
+          customer:
+            type: object
+            description: >-
+              This list of attributes is optional during reschdule. If
+              not                provided, the values will be obtained from the
+              database where the            previous CA details are stored
+            properties:
+              id:
+                type: string
+                description: >-
+                  The Customer ID/Code is a unique 10 digit code generated from
+                  the Siebel system (Siebel Internal Customer Identifier) when
+                  customer order is fulfilled. (For Example 901004100)
+              ownershipCode:
+                type: string
+                description: >-
+                  This is used to derive the customer service skill. 
+                  Not                 required if CustomerClass provided
+              name:
+                type: string
+                description: >-
+                  The name of the customer (person) if different from the
+                  Contact details. Otherwise this is the Contact name.
+              tradingName:
+                type: string
+                description: The name of the business if a business customer.
+              segment:
+                type: string
+                description: The customer segment to which the customer belongs.
+              address:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      AddressID/ ADBOR ID of the Primary Service Location of the
+                      Customer.
+                  homesPassedAddressId:
+                    type: string
+                    description: The Homes Passed Address Identifier from the Wizard system
+                  addressType:
+                    type: string
+                    description: >-
+                      Address Type set by EAST via ISL-FUL.Lookup Address. FWOM
+                      will use this value for address type validation. WFMA
+                      calls the Address Type as Location Type.
+                  lines:
+                    type: string
+                  state:
+                    type: string
+                    description: Geographical State where the address belongs to.
+                  geocode:
+                    type: object
+                    properties:
+                      latitude:
+                        type: string
+                        description: >-
+                          The exact geographic location of the entity. For tasks
+                          it is the place where the task must be carried out.
+                          For CTs it is their starting location
+                      longitude:
+                        type: string
+                        description: >-
+                          The exact geographic location of the entity. For tasks
+                          it is the place where the task must be carried out.
+                          For CTs it is their starting location
+                  subAddress:
+                    type: object
+                    properties:
+                      propertyType:
+                        type: string
+                        description: >-
+                          A value from an agree enumeration capturing details of
+                          the property where the work needs to be done
+                  serviceLocation:
+                    type: object
+                    properties:
+                      exchangeServiceArea:
+                        type: string
+                        description: >-
+                          The area in which the CT works or the area to which
+                          the task belongs. (Currently ESA)
+          contacts:
+            type: array
+            items:
+              $ref: '#/definitions/CARequestcontacts'
+          project:
+            type: object
+            properties:
+              subProject:
+                type: string
+                description: >-
+                  The billing information for the work. Mandatory if relevant.
+                  Can be sent in the request by the consumer or filled in by the
+                  CT
+              workBreakdownStructureItem:
+                type: string
+                description: >-
+                  The billing information for the work. Mandatory if relevant.
+                  Can be sent in the request by the consumer or filled in by the
+                  CT
+          order:
+            type: object
+            description: >-
+              Equivalent to MOLI / OLI sturcture. Configured Products is
+              Mandatory for FULFILLMENT Optional for a reschedule of an NBN
+              Appointment
+            properties:
+              id:
+                type: string
+                description: >-
+                  Order Number is the Sales Order Identifier that gets generated
+                  by Siebel during the Order submission.  This will be a Sales
+                  Order Number that will be maintained within Siebel.
+              salesOrderId:
+                type: string
+                description: >-
+                  Order Number is the Sales Order Identifier that gets generated
+                  by Siebel during the Order submission.  This will be a Sales
+                  Order Number that will be maintained within Siebel. Order
+                  Number + Revision Number + Wholesale/Retail indicator will be
+                  a unique key that will identify the Order instance.
+              orderType:
+                type: string
+                description: >-
+                  The Order Type identifies the current Sales Order Type and
+                  determines the fulfilment function of the Sales Order. 
+                  (Mandatory for fulfillment) The following Sales Order Types
+                  will be used - • New • Modify • Move • Change ES • Replace SIM
+                  • Disconnect
+              demandType:
+                type: string
+                description: >-
+                  NBN Appointment valid values - - Standard Install - Non EU
+                  Jumper Only
+              customer:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Customer Account Code is a unique 10 digit
+                      code                 generated from the Siebel System
+                      Conditional Mandatory for Bigpond MOLI (ADSL, Cable,
+                      Satellite)
+              billingAccount:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Billing Account Number is a unique 13 digit  code
+                      identifying the billing account in Siebel, maintained only
+                      in Siebel (Siebel Internal Billing account identifier).
+              orderItems:
+                type: array
+                items:
+                  $ref: '#/definitions/CARequestOrderorderItems'
+          troubleTicket:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique Ticket ID in the Ticketing system
+              impact:
+                type: string
+                description: Assurance - Fault Details
+              targetResolutionDate:
+                type: string
+                format: date-time
+                description: >-
+                  Customer Required Date. This is the date that the customer
+                  requested that the Appointment be made. YYYY-MM-DDTHH:mm:ss OR
+                  YYYY-MM-DDTHH:mm:ssZ OR YYYY-MM-DDTHH:mm:ss.0Z
+              requiredCompletionDate:
+                type: string
+                format: date-time
+                description: >-
+                  Obligatory Completion Date The date by which Telstra has
+                  agreed (internally or regulatory) that under normal
+                  circimstances we must deliver/fix the service. It should not
+                  be altered by MSD. MandComplDateTime for legacy
+              serviceLevelAgreement:
+                type: string
+                description: >-
+                  The service level that WFM must attempt to meet for
+                  this                customer’s jobs. Based on things like
+                  SLAs, CSG, etc. This field will be defaulted by CCB EAI for
+                  Siebel CSA to 'Standard'.
+              notes:
+                type: array
+                items:
+                  $ref: '#/definitions/CARequesttroubleTicketnotes'
+              reporting:
+                type: object
+                description: >-
+                  Aggregated Clearance codes will be sent by WFMA in which
+                  each            aggregated Clearance Code will consist of a 5
+                  character                 string where each character
+                  represents each of the 5                    Clearance Code
+                  Vaules. The first aggregated Clearance code is the one which
+                  restored the service.
+                properties:
+                  whenCreated:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the date and time associated with the
+                      code                (this will be used to find out which
+                      is the latest code)            . FaultCodeValue. e.g -
+                      2007-10-10T17:00:00Z in UTC
+                  sourceCode:
+                    type: string
+                    description: >-
+                      Fault Details. Source of fault reporter. E.g.
+                      Customer,             Customer Representative, Telstra etc
+                  supportCode:
+                    type: string
+                    description: >-
+                      Fault Details. Support code of the fault. (e.g. ADSL
+                      NDAT          - No Data Flow, Urgent, Outage, Recoverable
+                      Damages etc..)
+                  troubleCode:
+                    type: string
+                    description: Fault Details. Trouble code of the fault.
+              tests:
+                type: object
+                description: >-
+                  Aggregated Clearance codes will be sent by WFMA in which
+                  each            aggregated Clearance Code will consist of a 5
+                  character                 string where each character
+                  represents each of the 5                    Clearance Code
+                  Vaules. The first aggregated Clearance code is the one which
+                  restored the service.
+                properties:
+                  whenCreated:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the date and time associated with the
+                      code                (this will be used to find out which
+                      is the latest code)             . FaultCodeValue. e.g-
+                      2007-10-10T17:00:00Z in UTC
+                  conditionCode:
+                    type: string
+                    description: Fault Details
+                  diagnosisCode:
+                    type: string
+                    description: Fault Details
+              resolution:
+                type: object
+                properties:
+                  whenCreated:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the date and time associated with the
+                      code            (this will be used to find out which is
+                      the latest code) .          FaultCodeValue. e.g -
+                      2007-10-10T17:00:00Z in UTC
+                  whenOccurred:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Indicates the Date and time the service was restored. e.g
+                      - 2007-10-10T17:00:00Z in UTC
+                  resolved:
+                    type: string
+                    description: >-
+                      This field indicates whether the clearance code
+                      value               corresponds to the action that has
+                      restored the service. If ITAM is the TT provider system
+                      then only Actual or No will be populated, therefore
+                      Temporary is not received by any consumer. Note - *
+                      indicates that this field will be mandatory in case the
+                      codeType“ is "Clearance"
+              impactedService:
+                type: object
+                properties:
+                  serviceType:
+                    type: object
+                    properties: {}
+                  number:
+                    type: string
+                    description: >-
+                      The National Number associated to the Path
+                      identified                from the input where available.
+                      This value is returned               from
+                      ServiceabilityLevel2 in MSQ Format - <2 digit local are
+                      code><number>
+                  characteristics:
+                    type: object
+                    properties:
+                      silentLineIndicator:
+                        type: boolean
+                        description: >-
+                          Flag indicating whether the phone line is
+                          silent               (when the customer makes calls,
+                          the phone nbr is not             displayed to callee.)
+                          PSTN only.
+          appointment:
+            type: object
+            description: >-
+              For all domains, Appointment Class - Business Rule - a CA
+              Request            can have zero or one appointment. For
+              Assurance, Commitment Class - Business Rule :- a CA Request can
+              have zero or many commitments. For Fulfillment, Commitment Class -
+              Business Rule:- a CA Request can have zero or one commitment.
+              FULFILLMENT can only send either an appointment OR a commitment
+              not both for Telstra Appointments. FULFILLMENT can only send a
+              single appointment for NBN Appointments. Appointment / Commitment
+              is mandatory for FULFILLMENT - only Earliest Start Date and
+              Requested Due Date Appointment / Commitment is mandatory for
+              ASSURANCE - ALL Appointment / Commitment is mandatory for
+              Reschedule Scenario
+            properties:
+              id:
+                type: string
+                description: >-
+                  Appmt Id refering to all the tasks (appointments) within
+                  this            request. Generated by FWOM for Telstra Appts.
+                  Cmmt Id refering to all the tasks (commitments) within this
+                  request. Generated by FWOM. For NBN Appointments the Appt Id
+                  would only be supplied for a reschedule.
+              appointmentType:
+                type: string
+                description: APPT|CMMT
+              reasonCode:
+                type: string
+                description: >-
+                  Reason code for rescheduling the appmt/ cmmt This is mandatory
+                  for the Reschedule Scenario.
+              notes:
+                type: object
+                description: Notes about the Appointment.
+                properties:
+                  noteType:
+                    type: string
+                    description: >-
+                      The types of note. Valid values for NBN Appointments :-
+                      Notes Special Conditions
+                  value:
+                    type: string
+                    description: The particular details of that note
+              timePeriod:
+                type: object
+                properties:
+                  startDateTime:
+                    type: string
+                    format: date-time
+                    description: >-
+                      The date before which appointment/commitment work
+                      cannot            commence. Mandatory for Telstra
+                      Appointments Optional for NBN Appointments Copied from
+                      QWA.Response YYYY-MM-DDTHH:mm:ss OR YYYY-MM-DDTHH:mm:ssZ
+                      OR YYYY-MM-DDTHH:mm:ss.0Z
+                  endDateTime:
+                    type: string
+                    format: date-time
+                    description: >-
+                      This should be set to the ARDD/CRDD that was returned
+                      by            QWA in the QWA Response. The date by which
+                      the customer desires the appointment/commitment to have
+                      commenced. Commitment :- Inbound - The date by which the
+                      customer desires the service to be delivered/fixed.
+                      Outbound - Date committed to by WFM. May be outside of OCD
+                      due to lack of resource, or mitigated by MSD
+              slots:
+                type: array
+                items:
+                  $ref: '#/definitions/CARequestAppointmentslots'
+              serviceTypeAvailability:
+                type: object
+                properties:
+                  serviceabilityClass:
+                    type: string
+                    description: >-
+                      The serviceability class provides a finer grained
+                      definition of the service qualification result. It
+                      provides information regarding the serviceability of the
+                      primary technology (fibre, wireless, satellite, FTTB,
+                      FTTN, HFC) at the location.
+
+                      Valid values - 0 - 13,20-24
+
+                      0 - Planned to be serviced by Fibre in the future
+                      (boundary status isn't 'In Service' yet) 1 - Serviceable
+                      by Fibre, no drop or NTD in place 2 - Serviceable by
+                      Fibre, drop in place, no NTD in place 3 - Serviceable by
+                      Fibre, drop and NTD in place 4 - Planned to be serviced by
+                      Wireless 5 - Serviceable by Wireless, CPE not installed 6
+                      - Serviceable by Wireless, CPE installed 7 - Planned to be
+                      serviced by Satellite (post LTSS launch) 8 - Serviceable
+                      by Satellite, Satellite – NTD not installed (post LTSS
+                      launch) 9 - Serviceable by Satellite, Satellite – NTD
+                      installed (post LTSS launch) 10 - Planned to be
+                      serviceable by Copper 11 - Serviceable by copper, active
+                      node present 12 - Serviceable by copper, jumpering is
+                      required 13 - Serviceable by copper, infrastructure in
+                      place 20 - Planned to be serviced by HFC, outside plant
+                      does not exist 21 - Serviceable by HFC, the location has a
+                      street TAP but requires a lead-in, PCD, internal tie
+                      cable, and wall-plate/socket 22 - Serviceable by HFC, the
+                      location has a street TAP, lead-in & PCD in place, but no
+                      internal tie-cables with wall plates/sockets 23 -
+                      Serviceable by HFC, the location has a wall-plate/socket
+                      but no HFC NTD 24 - Serviceable by HFC, Location has a
+                      wall-plate/socket & HFC NTD and is 'Ready to Connect'
+              workforce:
+                type: object
+                properties:
+                  organisationalUnit:
+                    type: string
+                    description: >-
+                      Mandatory when Appt Type = “FIELD”. Workforce
+                      Enterprise            Unit Description
+              tasks:
+                type: array
+                items:
+                  $ref: '#/definitions/CARequestAppointmenttasks'
+  CARequestnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Notes about the customer Not applicable for NBN Appointments
+  CARequestcontacts:
+    type: object
+    properties:
+      contactType:
+        type: string
+        description: >-
+          Primary/Secondary/Site Primary  - Customer's first point of contact
+          Secondary - Alternative contact Site  - Contact details of the Site
+          location, if customer is not at the same location.
+      name:
+        type: string
+        description: Format - <First Name>+" "+<Surname>
+      number:
+        type: string
+        description: Phone Number
+      notes:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestContactsnotes'
+  CARequesttroubleTicketnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Notes at Task Container Level
+  CARequestAppointmentslots:
+    type: object
+    properties:
+      slotType:
+        type: string
+        description: >-
+          Represents what part of the day the Start of the slot belongs to.
+          Valid values -AM,PM
+      dueDate:
+        type: string
+        description: >-
+          Commitment - Date committed to be WFM. May be outside of OCD due
+          to                lack of resource, or mitigated by MSD.
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            format: date-time
+            description: >-
+              Returned Time Slot. The start of the period during which the
+              CT             needs to arrive at the customer’s premises
+          startTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+          endDateTime:
+            type: string
+            description: >-
+              (Output) The end of the period during which the CT needs
+              to                 arrive at the customer’s premises
+          endTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+  CARequestAppointmenttasks:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          IDs for the Task must be supplied. These must be unique with
+          the                  ‘Unique Id’ of the message. CSA - Mandatory
+      taskType:
+        type: string
+        description: >-
+          (Network Location Type) A value from an agreed enumeration capturing
+          the network location.
+      action:
+        type: string
+      forService:
+        type: object
+        properties:
+          serviceType:
+            type: string
+            description: >-
+              Fulfilment only. (4 service types in TR2.3). If not given, then
+              FWOM will use lookup as part of Product to CFS translation.
+      characteristics:
+        type: object
+        properties:
+          dispatchIndicator:
+            type: boolean
+            description: >-
+              Dispatch flag used to let WFMA know that the task is ready to
+              be            dispatched. This flag will be set to false for all
+              tasks that               Amdocs has to arrange logistics delivery
+              until a further update             from Amdocs once the material
+              is dispatched.Strategic
+          recallIndicator:
+            type: boolean
+            description: >-
+              Recall flag ("true"/"false"). Whether or not the Task is a
+              recall            for the CT
+          timezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+      notes:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestAppointmentTasksnotes'
+      technicians:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestAppointmentTaskstechnicians'
+      address:
+        type: object
+        description: Optional for Assurance in the Reschedule Scenario
+        properties:
+          id:
+            type: string
+            description: The ADBoR or CPR2 key for the exact location of the Task Address.
+          addressType:
+            type: string
+            description: >-
+              Address Type set by EAST via ISL-FUL.Lookup Address. FWOM will use
+              this value for address type validation. WFMA calls the Address
+              Type as Location Type
+          lines:
+            type: string
+            description: Human readable address for the CT’s consumption
+          state:
+            type: string
+            description: Geographical State where the address belongs to
+          geocode:
+            type: object
+            properties:
+              latitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity. For
+                  tasks                   it is the place where the task must be
+                  carried out.                     For CTs it is their starting
+                  location
+              longitude:
+                type: string
+                description: >-
+                  The exact geographic location of the entity.
+                  For                        tasks it is the place where the
+                  task must be carried out. For            CTs it is their
+                  starting location
+          subAddress:
+            type: object
+            properties:
+              propertyType:
+                type: string
+                description: >-
+                  A value from an agree enumeration capturing details of
+                  the              property where the work needs to be done.
+          serviceLocation:
+            type: object
+            properties:
+              exchangeServiceArea:
+                type: string
+                description: >-
+                  The area in which the CT works or the area to which the
+                  task            belongs. (Currently ESA)
+      contacts:
+        type: array
+        items:
+          $ref: '#/definitions/QWAcontacts'
+      taskRelationships:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskstaskRelationships'
+      subTasks:
+        type: array
+        items:
+          $ref: '#/definitions/QWAtaskssubTasks'
+  CARequestOrderorderItems:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          The Integration ID is a unique ID generated to identify the
+          specific            MOLI/OLI throughout its entire lifecycle. It does
+          not change once created. This is the MOLI / OLI ID. CCB-RCRM SOC needs
+          to a. pass the CCB “ORIGINAL INTEGRATION ID” into the FWOM
+          “Integration ID” if the CCB “ORIGINAL INTEGRATION ID” is NOT NULL
+          (this obviously occurs after the first initialisation of a MOLI / OLI)
+          or b. pass the CCB “INTEGRATION ID” into the FWOM “Integration ID” if
+          the CCB “ORIGINAL INTEGRATION ID” is NULL (this obviously occurs at
+          the time of the first initialisation of a MOLI / OLI) BP-BPS will
+          supply the Sales Channel Order Item ID into this field instead of the
+          Siebel MOLI ID
+      number:
+        type: string
+        description: >-
+          The Line Item Number identifies the MOLI / OLI. •All MOLI & OLIs will
+          have LineItemNumber = 1, 2, 3, …N for the 1st, 2nd, 3rd…Nth item.
+      action:
+        type: string
+        description: >-
+          This field represents the Action Code for each MOLI (or OLI).  
+          And             the possible values are defined as follows:- ● Add ●
+          Modify ● Suspend ● Resume ● Disconnect • - (dash) •Move-Add (MOC Only)
+          •Move-Delete (MOC Only) •Transition-Add(MOC Only)
+          •Transition-Delete(MOC Only) Refer to the Allowable Order Type matrix
+          for the list of allowable action codes
+      service:
+        type: object
+        properties:
+          number:
+            type: string
+            description: >-
+              Determines the Service Identifier used by Siebel.  All
+              possible              values could represent the following
+              entities - ● FNN ● Big Pond ID ● SIM Serial Number Etc.
+
+              If SIM Serial Number is provided and is numeric with a minimum
+              length of 9 and a maximum length of 13, it is converted to the 20
+              digit ICCID by the MCO service when the mobile service is
+              activated or when the SIM number has changed.
+
+              Determines the Service Identifier used by Siebel.  All possible
+              values could represent the following entities - • FNN - Full
+              National Number for CONNECT appointments & START commitments • Big
+              Pond ID - BigPond user name including the domain realm. E.g.
+              tony.jones@bigpond.com for BPS appointments. Mandatory for
+              relocations of existing BigPond customers • Etc Mandatory when
+              Appt Type = “PAYTV” for Create Mandatory when Appt Type = ‘EXCH’
+          serviceType:
+            type: string
+            description: >-
+              Indicates the type of Service Offering. Eg. • Broadband ADSL •
+              Broadband Cable • Broadband Velocity • PSTN • Calling •
+              Subscription TV • Internet
+      customerFacingService:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              The Fulfillment Reference ID is the unique identifier for each
+              of            the  line items defined as part of the CFS
+              Offering.It is a                 Mandatory field to be sent for
+              MOC orders
+          name:
+            type: string
+            description: >-
+              The Fulfillment Reference ID is the unique identifier for each
+              of            the  line items defined as part of the CFS
+              Offering.It is a                Mandatory field to be sent for MOC
+              orders
+      product:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Siebel Internal Product Identifier that identifies the
+              Product              /Service represented by the OLI.
+          name:
+            type: string
+            description: >-
+              The Product identifies the respective product that is
+              configured             in Siebel.  Sourced from Tribold. This is
+              the Siebel Part Number
+          number:
+            type: string
+            description: >-
+              The Part Number is the part number associated with the
+              respective            Product
+          characteristics:
+            type: object
+            properties:
+              welcomePackRequired:
+                type: string
+                description: >-
+                  This flag indicates the existence of
+                  collateral/literature              (Product Welcome Packs)
+                  required to be sent to the customer.            Possible
+                  values are - • Y – Welcome Pack is required to be sent. • N –
+                  Welcome Pack is not required to be sent
+              serviceLevelAgreement:
+                type: string
+                description: >-
+                  The service level that WFM must attempt to meet for
+                  this                customer’s jobs. Based on things like
+                  SLAs, CSG, etc
+              shippingRequired:
+                type: string
+                description: >-
+                  This flag determines whether the product represented by the
+                  OLI is required to be shipped to the sip to Address. Possible
+                  values are • Y – Product must be Shipped • N – Product must
+                  not be Shipped
+              provisionable:
+                type: string
+                description: >-
+                  This flag determines whether the OLI is
+                  provisionable.                  Possible values are • Y –
+                  Product is Provisionable • N – Product is not Provisionable
+              transferType:
+                type: string
+                description: >-
+                  Transfer Type indicating the type of transfer on an order
+                  (if            applicable). List of values - Churn - Churn In
+                  Transition - Indicates a Churn-In in Transition
+              appointmentOverrideIndicator:
+                type: string
+                description: >-
+                  In an ‘appmt override’ scenario, the task list is not received
+                  from SQ, but it is overwritten by the CCB operator. In this
+                  case a new task (and Job) needs to be generated in FWOM, along
+                  with all required task and job attributes
+              silentLineIndicator:
+                type: boolean
+                description: >-
+                  Flag indicating whether the phone line is silent (when
+                  the              customer makes calls, the phone nbr is not
+                  displayed to                 callee.) PSTN only
+              pathId:
+                type: string
+                description: Path ID for Products that need Path ID
+              inplaceNationalNumber:
+                type: string
+                description: >-
+                  The National Number associated to the Path identified from the
+                  input where available. This value is returned from
+                  ServiceabilityLevel2 in MSQ Format - <2 digit local are
+                  code><number>
+              firstLineIndicator:
+                type: string
+                description: >-
+                  Answer to the question if this is the first line into
+                  the              customer premises. Treat as Boolean-
+                  ("Y","N")
+          attributes:
+            type: object
+            properties:
+              action:
+                type: string
+                description: >-
+                  This field represents the Action Code for the List of
+                  Attributes for the current MOLI (or OLI).  The following
+                  possible and the possible values are defined as follows - •
+                  Add • Modify • Delete
+              name:
+                type: string
+                description: >-
+                  Represents the Name of the Name/Value Attribute Pair Job
+                  Workforce Type Remarks to CT
+              value:
+                type: string
+                description: Represents the Value of the Name/Value Attribute Pair
+              previousValue:
+                type: string
+                description: >-
+                  Represents the previous value of the Name/Value
+                  Attribute               pair
+              description:
+                type: string
+                description: Represents the description
+      appointments:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestOrderorderItemsappointments'
+  CARequestContactsnotes:
+    type: object
+    description: Notes about the Contact
+    properties:
+      noteType:
+        type: string
+        description: The types of note. Valid values for NBN Appointments Notes
+      value:
+        type: string
+        description: The particular details of that note.
+  CARequestOrderorderItemsappointments:
+    type: object
+    properties:
+      appointmentType:
+        type: string
+        description: >-
+          The type of appointment / commitment that is required for this
+          MOLI              or Product. "APPT" = appointment "CMMT" = commitment
+      requestedCompletionDate:
+        type: string
+        format: date-time
+        description: >-
+          Customer Required Date. This is the date that the customer requested
+          that the Appointment be made.
+      requiredCompletionDate:
+        type: string
+        format: date-time
+        description: >-
+          Obligatory Completion Date The date by which Telstra has agreed
+          (internally or regulatory) that under normal circimstances we must
+          deliver/fix the service. It should not be altered by MSD.
+          MandComplDateTime for legacy
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Classification of the appointment to be booked in workforce systems
+          Expected values - • 'Accelerated' - Appointment with high priority in
+          workforce calendar • 'Standard’ – Appointment with normal priority in
+          workforce calendar
+      orderItems:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestOrderorderItemsorderItems'
+  CARequestOrderorderItemsorderItems:
+    type: object
+    description: >-
+      OLIs in the SID are represented by the self-referencing relationship of
+      BusinessInteractionItemReferences of type CustomerOrderItem. OLI Starting
+      Path - order/orderItems/orderItems/.. Any further levels of sub-OLIs will
+      have path of order/orderItems/orderItems/orderItems/.. This OLI/Sub-OLI
+      relationship will go down till three levels as ESF-BC can check the
+      OLI/sub-OLIs till third level due to  limitation in converting the further
+      levels of OLI/sub-OLIs
+    properties: {}
+  CARequestAppointmentTasksnotes:
+    type: object
+    properties:
+      value:
+        type: string
+        description: Notes about the job
+  CARequestAppointmentTaskstechnicians:
+    type: object
+    properties:
+      technicianType:
+        type: string
+        description: Preferred|Excluded|Required
+      id:
+        type: string
+        description: >-
+          Preferred CT- NSA only - The preferred technician. Not guaranteed.
+          Useful to send the same person for recurring faults etc.
+
+          Excluded CT- NSA only - The technician who should not be sent.
+          Guaranteed. Useful to refrain from sending an 'unliked' CT to a
+          customer. Required CT- NSA only- Required technician. Guranteed
+  CAResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        properties:
+          appointment:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  Workforce doing the work related to this closure code
+                  status            change Valid Values - NBN
+              appointmentType:
+                type: string
+                description: APMT|CMMT
+              status:
+                type: string
+                description: >-
+                  List of enterprise appointment states Valid values
+                  -Reserved,Booked,Complete,Review,InProgress,CancelledUnknown
+              subStatuses:
+                type: array
+                items:
+                  $ref: '#/definitions/QWAresponsesubStatuses'
+              version:
+                type: object
+                properties:
+                  revisionTimestamp:
+                    type: string
+                    description: >-
+                      DateTime stamp of when a change was made to
+                      the                     appointment state in NBN
+                  timezoneOffset:
+                    type: string
+                    description: This field may contain the actual offset from UTC.
+              slots:
+                type: object
+                description: The Confirmed Appointment Time Slot
+                properties:
+                  slotType:
+                    type: string
+                    description: >-
+                      Represents what part of the day the Start of the slot
+                      belongs to. Valid values - AM PM
+                  whenCreated:
+                    type: string
+                    description: The date time the Appointment slot was created.
+                  whenCreatedTimezoneOffset:
+                    type: string
+                    description: This field may contain the actual offset from UTC
+                  timePeriod:
+                    type: object
+                    properties:
+                      startDateTime:
+                        type: string
+                        description: >-
+                          Returned Time Slot. The start of the period during
+                          which the CT needs to arrive at the customer’s
+                          premises
+                      startTimezoneOffset:
+                        type: string
+                        description: This field may contain the actual offset from UTC
+                      endDateTime:
+                        type: string
+                        description: >-
+                          The end of the period during which the CT needs
+                          to              arrive at the customer’s premises
+                      endTimezoneOffset:
+                        type: string
+                        description: This field may contain the actual offset from UTC
+              workforce:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      Workforce doing the work related to this closure
+                      code               status change Valid Values - NBN
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/definitions/CAResponseAppointmenthistory'
+  CAResponseAppointmenthistory:
+    type: object
+    description: >-
+      There will be no Appointment History for the reservation of a
+      new                    appointment
+    properties:
+      status:
+        type: string
+        description: >-
+          List of enterprise appointment states Valid values
+          -Reserved,Booked,Complete,Review,In Progress,Cancelled,Unknown
+      backendStatus:
+        type: string
+        description: The Status as supplied by the workforce system
+      subStatuses:
+        type: array
+        items:
+          $ref: '#/definitions/QWAresponsesubStatuses'
+      version:
+        type: object
+        properties:
+          revisionTimestamp:
+            type: string
+            description: >-
+              DateTime stamp of when a change was made to
+              the                     appointment state in NBN
+          timezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+      workforce:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Workforce doing the work related to this closure
+              code                           status change Valid Values - NBN
+      slots:
+        type: array
+        items:
+          $ref: '#/definitions/CAResponseHistoryslots'
+  CAResponseHistoryslots:
+    type: object
+    properties:
+      slotType:
+        type: string
+        description: >-
+          Represents what part of the day the Start of the slot belongs to.
+          Valid values - AM PM
+      whenCreated:
+        type: string
+        description: The date time the Appointment slot was created.
+      whenCreatedTimezoneOffset:
+        type: string
+        description: This field may contain the actual offset from UTC
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Classification of the appointment to be booked in workforce systems
+          Expected values - • 'Accelerated' - Appointment slot with high
+          priority in workforce calendar • 'Standard’ – Appointment slot with
+          normal priority in workforce calendar • 'PriorityAssist' - Appointment
+          slot which is Priority Assist in workforce calendar •
+          'OutsideSLAWindow' - Appointment slot that is Outside the SLA Window
+          for the requested request slot Default Values - * 'Unknown' (ISL FWOM
+          will send default value incase if NBN is not sending any
+          appointmentLeadTime value)
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            description: >-
+              Returned Time Slot. The start of the period during which the
+              CT             needs to arrive at the customer’s premises
+          startTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+          endDateTime:
+            type: string
+            description: >-
+              The end of the period during which the CT needs to             
+              arrive at the customer’s premises
+          endTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+  GRDResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        properties:
+          workforceSystem:
+            type: string
+            description: >-
+              This will be actual workforce doing the work (as opposed to the
+              workforce system in which the appointment was booked). Valid
+              values - NBN,TELSTRA
+          timezone:
+            type: string
+            description: >-
+              Indicates if all date/time fields are in "UTC" or "SITE" time UTC
+              = All dates are using UTC. and there may be different UTC offset
+              at the task level for Multi-location Flag = TRUE. SITE = All dates
+              are using local time. No offsets at the task level
+          timezoneOffset:
+            type: string
+            description: This field contains the actual offset from UTC
+          multipleTruckrollIndicator:
+            type: boolean
+            description: >-
+              Values in ("true","false") Mandatory for Telstra Appointments
+              Optional for NBN Appointments Only if Single Appmt is not
+              successful. Whether the request is part of multiple truck roll
+          sourceSystemId:
+            type: string
+            description: An external reference id defined by the consumer
+          appointment:
+            type: array
+            items:
+              $ref: '#/definitions/GRDResponseappointments'
+  GRDResponseappointments:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          Appmt Id refering to all the tasks (appointments) within this
+          request             . Generated by FWOM (or NBN for NBN Appointments).
+          For NBN Appointments the length will be 15 Cmmt Id refering to all the
+          tasks (commitments) within this request. Generated by FWOM.
+      appointmentType:
+        type: string
+        description: APPT|CMMT
+      status:
+        type: string
+        description: >-
+          List of enterprise appointment states Valid value
+          -Reserved,Booked,Complete,Review,In Progress,Cancelled,Unknown
+      reasonCode:
+        type: string
+        description: >-
+          Reschedule Reason code corresponding to the Reason for the
+          Scheduling            Update.If Reschedule Reason code not provided,
+          then the value will be            defaulted to '66'
+      subStatuses:
+        type: array
+        items:
+          $ref: '#/definitions/QWAresponsesubStatuses'
+      pointOfNoReturn:
+        type: boolean
+        description: >-
+          Point Of No Return (PONR) is specific for Strategic Products only
+          for            Telstra Appointments
+      notes:
+        type: array
+        items:
+          $ref: '#/definitions/GRDResponseAppointmentsnotes'
+      version:
+        type: object
+        properties:
+          revisionTimestamp:
+            type: string
+            description: >-
+              DateTime stamp of when a change was made to
+              the                     appointment state in NBN
+          timezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+      contacts:
+        type: array
+        items:
+          $ref: '#/definitions/CARequestcontacts'
+      location:
+        type: object
+        description: Location details of the appointment.
+        properties:
+          locationType:
+            type: string
+            description: 'Valid values:- ''Urban'', ''Major Rural'', ''Minor Rural'' or ''Remote''.'
+          nbnLocationId:
+            type: string
+            description: The NBN Location Id
+          connectivityServiceAreaId:
+            type: string
+            description: Supplied if PrimaryAccessTechnology is either Fibre or Wireless
+          primaryAccessTechnology:
+            type: string
+            description: >-
+              Primary Access Technology at the location Valid values - 'Fibre',
+              'Wireless', 'Satellite' 'FTTB', 'FTTN', 'HFC'
+          serviceabilityClass:
+            type: string
+            description: >-
+              The serviceability class provides information regarding
+              the                 serviceability of the primary technology
+              (fibre, wireless,                  satellite, FTTB, FTTN, HFC)) at
+              the location. Valid values:- '0','1', '2', '3', '4', '5', '6',
+              '7', '8', '9', '10', '11', '12', '13', '20','21','22', '23', '24'
+          serviceabilityClassDescription:
+            type: string
+            description: User friendly description of the serviceability class
+          remoteLocationStatus:
+            type: string
+            description: >-
+              Remote Location Flag.  It represents the status of the
+              service               being installed. List  of values include:-
+              1.  Remote Location 2.  Unspecified
+          geocode:
+            type: object
+            properties:
+              geodeticDatum:
+                type: string
+                description: The geographicDatum used for the location
+              latitude:
+                type: string
+                description: >-
+                  Co-ordinates of the appointment location. Latitudes south of
+                  the equator are expressed as a negative number, north of the
+                  equator as positive. Valid value range -8 to -45 based on
+                  GDA94. Format:- [+/-]nnn.nnnnnnnn
+      characteristics:
+        type: object
+        properties:
+          medicalPriority:
+            type: string
+            description: >-
+              Indicator as to whether or not there is a Medical Priority
+              r                related to the appointment.
+          demandType:
+            type: string
+            description: >-
+              Tthe type of work that needs to be carried out by the technician
+              Valid values:- Standard Install Non EU Jumper Only
+          connectionType:
+            type: string
+            description: >-
+              NBN Appointments:- LOV:- 'Standard' or 'Accelerated' Telstra
+              Appointments (CSA and Fulfilment domain) :- LOV:- Standard,
+              Premium, Medical Priority,Accelerated
+          connectionTypeDescription:
+            type: string
+            description: >-
+              NBN Appointments:- LOV:- The requested appointment is of
+              'Standard' connection SLAs. The requested appointment is of
+              'Accelerated' connection SLAs. Telstra Appointments (CSA and
+              Fulfilment domain) :- The requested appointment is of 'Standard'
+              connection SLAs. The requested appointment is of 'Accelerated'
+              connection SLAs.The requested appointment is of 'Premium'
+              connection SLAs. The requested appointment is of 'Medical
+              Priority' connection SLAs
+          providerStatus:
+            type: string
+            description: The Status as supplied by the workforce system
+      slots:
+        type: array
+        items:
+          $ref: '#/definitions/GRDResponseAppointmentsslots'
+      workforce:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Workforce doing the work related to this closure code
+              status               change Valid Values:- NBN
+          organisationalUnit:
+            type: string
+            description: >-
+              Mandatory when Appt Type = “FIELD”. Workforce Enterprise
+              Unit           Description
+      tasks:
+        type: array
+        items:
+          $ref: '#/definitions/GRDResponseAppointmenttasks'
+      history:
+        type: array
+        items:
+          $ref: '#/definitions/CAResponseAppointmenthistory'
+  GRDResponseAppointmentsnotes:
+    type: object
+    properties:
+      noteType:
+        type: string
+        description: >-
+          The types of note. Valid values for NBN Appointments :- Notes Special
+          Conditions
+      value:
+        type: string
+        description: The particular details of that note
+  GRDResponseAppointmentsslots:
+    type: object
+    description: The Confirmed Commitment Time Slot. or The Confirmed Appointment Time Slot
+    properties:
+      slotType:
+        type: string
+        description: >-
+          Timeslot profile for which the appointment is to be made. E.g.
+          AM                   (for morning slots), PM (for afternoon slots).
+          Used in Telstra                (legacy) and NBN Appointments.
+      dueDate:
+        type: string
+        description: >-
+          Timeslot profile for which the appointment is to be made. E.g.
+          AM               (for morning slots), PM (for afternoon slots). Used
+          in Telstra                   (legacy) and NBN Appointments
+      whenCreated:
+        type: string
+        description: >-
+          Commitment:- Date committed to be WFM. May be outside of OCD due
+          to                lack of resource, or mitigated by MSD
+      whenCreatedTimezoneOffset:
+        type: string
+        description: This field may contain the actual offset from UTC
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            description: >-
+              Telstra Commitment Date (TCD) - Start Date Time Or Returned Time
+              Slot. The start of the period during which the CT needs to arrive
+              at the customer’s premises
+          startTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC.
+          endDateTime:
+            type: string
+            description: >-
+              Telstra Commitment Date (TCD) - End Date Time (Output) The end of
+              the period d uring which the CT needs to arrive at the customer’s
+              premises
+          endTimezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC.
+          telstraCommit:
+            type: object
+            properties:
+              startDateTime:
+                type: string
+                description: Telstra Commitment Date (TCD) - Start Date Time
+              endDateTime:
+                type: string
+                description: Telstra Commitment Date (TCD) - End Date Time
+  GRDResponseAppointmenttasks:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          IDs for the Task must be supplied. These must be unique with
+          the                ‘Unique Id’ of the message. CSA - Mandatory
+      taskType:
+        type: string
+        description: >-
+          (Network Location Type) A value from an agreed enumeration capturing
+          the network location.
+      status:
+        type: string
+        description: Consumer view of the state of the task in WFM.
+      subStatus:
+        type: string
+        description: >-
+          Sub-state of the task. It can contain more than one sub-state.
+          (comma            delimitted values)
+      statusTimestamp:
+        type: string
+        description: >-
+          Date-time when status update has been triggered. Date-time when the
+          internal status changes in Click
+      action:
+        type: string
+      timezoneOffset:
+        type: string
+        description: This field contains the actual offset from UTC
+      createdBy:
+        type: string
+        description: >-
+          Name of consumer which has created the order. E.g. BPS has
+          created               the order but ASMS updates the task. In that
+          case, HostID will be                   ASMS but Task_Creator_ID  is
+          BPS.
+      identifiers:
+        type: array
+        items:
+          $ref: '#/definitions/GRDResponseAppointmentsTasksidentifiers'
+      forService:
+        type: object
+        properties:
+          serviceType:
+            type: string
+            description: >-
+              Fulfilment only. (4 service types in TR2.3). If not given, then
+              FWOM will use lookup as part of Product to CFS translation
+      address:
+        type: object
+        properties:
+          id:
+            type: string
+            description: The ADBoR or CPR2 key for the exact location of the Task Address.
+      subTasks:
+        type: array
+        items:
+          $ref: '#/definitions/GRDResponseTaskssubTasks'
+  GRDResponseAppointmentsTasksidentifiers:
+    type: object
+    properties:
+      identifierType:
+        type: string
+        description: Order Item ID | Trouble Ticket ID | Subcontainer ID
+      value:
+        type: string
+        description: >-
+          TT id for CSA MOLI ID for Ful Task Sub-Container ID (Service Instance
+          ID for Ful- set by ASMS for example) - This will be another External
+          Ref ID for a task
+  GRDResponseTaskssubTasks:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          An ID that is relevant to the Consumer. This is not used
+          functionally           within WFM
+      status:
+        type: string
+        description: >-
+          The state of the Job on completion of the task. Status of the job -
+          mostly the same as Task Status except in Partial Complete and
+          Incomplete scenarios.
+      subStatus:
+        type: string
+        description: Action on the job.
+
+  GCDRequest:
+    type: object
+    properties:
+      userId:
+        type: string
+        description: User ID in the context of the host/consumer system.
+      data:
+        type: object
+        properties:
+          whenCreated:
+            type: string
+            format: date-time
+            description: >-
+              For Fulfillment, the ApplicationDateTime is the date time
+              stamp              within the consumer application when the order
+              was raised
+          timezone:
+            type: string
+            description: >-
+              Indicates if all date/time fields are in "UTC" or "SITE" time UTC
+              = All dates are using UTC. and there may be different UTC offset
+              at the task level for Multi-location Flag = TRUE. SITE = All dates
+              are using local time. No offsets at the task level
+          timezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+          medicalPriority:
+            type: string
+            description: >-
+              Indicator as to whether or not there is a Medical
+              Priority                  related to the Voice service
+          requestedCompletionDate:
+            type: string
+            description: The customer requested date / time
+          customer:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  The Customer ID/Code is a unique 10 digit code generated from
+                  the Siebel system (Siebel Internal Customer Identifier) when
+                  customer order is fulfilled. (For Example 901004100)
+              ownershipCode:
+                type: string
+                description: >-
+                  This is used to derive the customer service skill. 
+                  Not                 required if CustomerClass provided
+              name:
+                type: string
+                description: >-
+                  The name of the customer (person) if different from
+                  the                 Contact details. Otherwise this is the
+                  Contact name.
+              tradingName:
+                type: string
+                description: The name of the business if a business customer.
+              segment:
+                type: string
+                description: The customer segment to which the customer belongs.
+              address:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      AddressID/ ADBOR ID of the Primary Service Location
+                      of              the Customer.
+          order:
+            type: object
+            description: >-
+              Equivalent to MOLI / OLI sturcture. Configured Products is
+              Mandatory for FULFILLMENT
+            properties:
+              id:
+                type: string
+                description: >-
+                  Order Number is the Sales Order Identifier that
+                  gets                    generated by Siebel during the Order
+                  submission.  This will             be a Sales Order Number
+                  that will be maintained within Siebel
+              salesOrderId:
+                type: string
+                description: >-
+                  Unique Order Number is the unique Sales Order Identifier
+                  that            gets generated during the Order submission.
+                  The Unique Order Number will incorporate  the following
+                  variables to establish its uniqueness- Order Number
+                  Retail/Wholesale customer Revision Number
+              orderType:
+                type: string
+                description: >-
+                  The Order Type identifies the current Sales Order Type
+                  and              determines the fulfilment function of the
+                  Sales Order.                  (Mandatory for fulfillment) The
+                  following Sales Order Types             will be used- • New •
+                  Modify • Move • Change ES • Replace SIM • Disconnect
+              orderSubType:
+                type: string
+                description: >-
+                  The Order Sub Type identifies the Sales Order Sub Type
+                  and               determines the fulfilment sub-function of
+                  the Sales Order.               The following Sales Order Types
+                  will be used- CHOWN GRADUATE Transition
+              customer:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Customer Account Code is a unique 10 digit
+                      code                  generated from the Siebel System
+                      Conditional Mandatory for Bigpond MOLI (ADSL, Cable,
+                      Satellite)
+              billingAccount:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: >-
+                      The Billing Account Number is a unique 13 digit
+                      code                 identifying the billing account in
+                      Siebel, maintained only            in Siebel (Siebel
+                      Internal Billing account identifier). orderItems
+              orderItems:
+                type: array
+                description: >-
+                  Product at the MOLI level All attributes described under the
+                  MOLI level that are Madnatory ARE NOT mandatory at the OLI
+                  level.
+                items:
+                  $ref: '#/definitions/GCDOrderorderItems'
+          appointment:
+            type: object
+            properties:
+              id:
+                type: string
+                description: >-
+                  Appmt Id refering to all the tasks (appointments) within
+                  this            request. Generated by FWOM for Telstra
+                  Appointments Cmmt Id refering to all the tasks (commitments)
+                  within this request. Generated by FWOM. This is mandatory for
+                  the Reschedule Scenario
+              appointmentType:
+                type: string
+                description: The value must be - APPT CMMT
+              reasonCode:
+                type: string
+                description: >-
+                  Reason code for rescheduling the appmt/ cmmt This is mandatory
+                  for the Reschedule Scenario.
+          externalAppointments:
+            type: array
+            items:
+              $ref: '#/definitions/GCDRequestexternalAppointments'
+  GCDRequestexternalAppointments:
+    type: object
+    properties:
+      id:
+        type: string
+        description: The External Workforce System Appointment ID
+      sourceSystem:
+        type: string
+        description: The External Workforce System ID. E.g. NBN
+      appointmentType:
+        type: string
+        description: The Value must be  - APPT CMMT
+      timezone:
+        type: string
+        description: >-
+          Indicates if all date/time fields are in "UTC" or "SITE" time UTC =
+          All dates are using UTC. and there may be different UTC offset at the
+          task level for Multi-location Flag = TRUE. SITE = All dates are using
+          local time. No offsets at the task level
+      timezoneOffset:
+        type: string
+        description: This field may contain the actual offset from UTC.
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            format: date-time
+            description: The External Workforce System Appointment Start Date/Time
+          endDateTime:
+            type: string
+            format: date-time
+            description: >-
+              For Appointment - The External Workforce System Appointment End
+              Date/Time. For Commitment - The External Workforce System
+              Commitment End Date/Time.
+  GCDOrderorderItems:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          The Integration ID is a unique ID generated to identify the
+          specific             MOLI/OLI throughout its entire lifecycle. It does
+          not change once created.This is the MOLI / OLI ID. CCB-RCRM SOC needs
+          to a. pass the CCB “ORIGINAL INTEGRATION ID” into the FWOM
+          “Integration ID” if the CCB “ORIGINAL INTEGRATION ID” is NOT NULL
+          (this obviously occurs after the first initialisation of a MOLI / OLI)
+          or b. pass the CCB “INTEGRATION ID” into the FWOM “Integration ID” if
+          the CCB “ORIGINAL INTEGRATION ID” is NULL (this obviously occurs at
+          the time of the first initialisation of a MOLI / OLI) BP-BPS will
+          supply the Sales Channel Order Item ID into this field instead of the
+          Siebel MOLI ID
+      number:
+        type: string
+        description: >-
+          The Line Item Number identifies the MOLI / OLI. • All MOLI & OLIs will
+          have LineItemNumber = 1, 2, 3 …N for the 1st, 2nd, 3rd…Nth item
+      action:
+        type: string
+        description: >-
+          This field represents the Action Code for each MOLI (or OLI).  
+          And             the possible values are defined as follows :- ● Add ●
+          Modify ● Suspend ● Resume ● Disconnect • - (dash) •Move-Add (MOC Only)
+          •Move-Delete (MOC Only) •Transition-Add(MOC Only)
+          •Transition-Delete(MOC Only) Refer to the Allowable Order Type matrix
+          for the list of allowable action codes.
+      service:
+        type: object
+        properties:
+          number:
+            type: string
+            description: >-
+              Determines the Service Identifier used by Siebel.  All
+              possible              values could represent the following
+              entities :- ● FNN ● Big Pond ID ● SIM Serial Number Etc.
+
+              If SIM Serial Number is provided and is numeric with a minimum
+              length of 9 and a maximum length of 13, it is converted to the 20
+              digit ICCID by the MCO service when the mobile service is
+              activated or when the SIM number has changed.
+
+              Determines the Service Identifier used by Siebel.  All possible
+              values could represent the following entities :- • FNN - Full
+              National Number for CONNECT appointments & START commitments • Big
+              Pond ID - BigPond user name including the domain realm. E.g.
+              tony.jones@bigpond.com for BPS appointments. Mandatory for
+              relocations of existing BigPond customers • Etc Mandatory when
+              Appt Type = “PAYTV” for Create Mandatory when Appt Type = ‘EXCH’
+          serviceType:
+            type: string
+            description: >-
+              Fulfilment only. (4 service types in TR2.3). A value from
+              an                agreed enumeration capturing the service type
+              (BP Cable, BP                 Satellite, BP ADSL, ...) to be
+              derived from Order Item - not used by CSA
+
+              Allowable LOV (Siebel Service Type) - "Broadband Cable" -
+              "Broadband ADSL" - "FOXTEL" "Broadband Satellite" removed as a
+              value
+      customerFacingService:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              The Fulfillment Reference ID is the unique identifier for each
+              of              the line items defined as part of the CFS
+              Offering.It is a                  Mandatory field to be sent for
+              MOC orders
+          name:
+            type: string
+            description: >-
+              The Fulfillment Reference Name identifies each of the line
+              items            defined as part of the CFS Offering.It is a
+              Mandatory field to be            sent for MOC orders
+      product:
+        type: object
+        properties:
+          name:
+            type: string
+            description: >-
+              The Product identifies the respective product that is
+              configured            in Siebel.  Sourced from Tribold.
+          number:
+            type: string
+            description: >-
+              The Part Number is the part number associated with the
+              respective            Product
+          characteristics:
+            type: object
+            properties:
+              firstLineIndicator:
+                type: string
+                description: >-
+                  Answer to the question if this is the first line into
+                  the               customer premises. Treat as Boolean -
+                  ("Y","N")
+          attributes:
+            type: array
+            items:
+              $ref: '#/definitions/GCDRequestProductattributes'
+          appointments:
+            type: array
+            items:
+              $ref: '#/definitions/GCDRequestOrderappointments'
+  GCDRequestProductattributes:
+    type: object
+    properties:
+      action:
+        type: string
+        description: >-
+          This field represents the Action Code for the List of Attributes
+          for             the current MOLI (or OLI).  The following possible and
+          the possible               values are defined as follows - • Add •
+          Modify • Delete
+      name:
+        type: string
+        description: >-
+          Represents the Name of the Name/Value Attribute Pair Job Workforce
+          Type Remarks to CT
+      value:
+        type: string
+        description: Represents the Value of the Name/Value Attribute Pair
+      previousValue:
+        type: string
+        description: Represents the previous Value of the Name/value Attribute Pair
+      description:
+        type: string
+        description: Represents the description
+  GCDRequestOrderappointments:
+    type: object
+    properties:
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          The service level that WFM must attempt to meet for this
+          customer’s             jobs. Based on things like SLAs, CSG, etc.
+      orderItems:
+        type: array
+        items:
+          $ref: '#/definitions/GCDRequestOrderItemsorderItems'
+  GCDRequestOrderItemsorderItems:
+    type: object
+    properties: {}
+  GCDResponse:
+    type: object
+    properties:
+      userId:
+        type: string
+        description: >-
+          The requesting Host. Must be unique across the enterprise. IRM Name of
+          the Consumer Application. Values CCB-RCRM SOC MAXIM LOLO
+      data:
+        type: object
+        properties:
+          timezone:
+            type: string
+            description: >-
+              Indicates if all date/time fields are in "UTC" or "SITE" time UTC
+              = All dates are using UTC. and there may be different UTC offset
+              at the task level for Multi-location Flag = TRUE. SITE = All dates
+              are using local time. No offsets at the task level.
+          timezoneOffset:
+            type: string
+            description: This field may contain the actual offset from UTC
+          dateChangeReasonCodeId:
+            type: string
+            description: >-
+              Returned if dates changed. The first occurrence of Date Change
+              Reason Code ID as returned by either Legacy WFM or Strategic WFM
+              systems. Returned if dates changed due to high work load or MSDs
+              created in CONNECT
+          latestTelstraCommitmentDate:
+            type: string
+            format: date-time
+            description: Order Level Telstra Commitment Date.  Max of product level TCD
+          latestRequiredCompletionDate:
+            type: string
+            format: date-time
+            description: Order Level obligatory Completion Date.  Max of product level OCD
+          latestCustomerServiceGuaranteeDate:
+            type: string
+            format: date-time
+            description: Order Level Customer Service Gaurantee.  Max of product level CSG
+          regionCode:
+            type: string
+            description: >-
+              Urban Township/community grouping of 10,000 people or more Major
+              Rural Township/community grouping of more than 2,500 people but
+              less than 10,000 people Minor Rural Township/community grouping of
+              201 people or more but not more than 2,500 people within a
+              standard zone Remote Township/community grouping of less than 200
+              people or township/community grouping located outside a standard
+              zone
+          commitmentDates:
+            type: array
+            items:
+              $ref: '#/definitions/GCDRequestcommitmentDates'
+  GCDRequestcommitmentDates:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          The Integration ID is a unique ID generated to identify the
+          specific            MOLI/OLI throughout its entire lifecycle
+      telstraCommitmentDate:
+        type: string
+        format: date-time
+        description: Telstra Commitent Date for product where applicable
+      requiredCompletionDate:
+        type: string
+        format: date-time
+        description: Customer Service Gaurentee for product where applicable.
+      customerServiceGuaranteeDate:
+        type: string
+        format: date-time
+        description: Customer Service Gaurentee for product where applicable.
+      customerServiceGuaranteeIndicator:
+        type: boolean
+        description: Values are "True" or "False" Is a CSG applicable for this product
+  UWOSRequest:
+    type: object
+    properties:
+      userId:
+        type: string
+        description: >-
+          User ID in the context of the host/consumer system. Note - For
+          Fulfillment consumers, due to limitations in the provider systems,
+          FWOM would be expecting only values with length up to 8 characters.
+      data:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Conditional Mandatory Unique identifier for each order and same as
+              base order. This is the Customer Order Id generated at the
+              Consumer end. This field is mandatory for Strategic Service
+              Products namely Cable, NBN Voice (Fibre and Fixed Wireless) and
+              NBN (Fibre and Fixed Wireless).
+          whenCreated:
+            type: string
+            description: >-
+              Date and Time when the transaction was exactly was initiated
+              by             the Consumer.
+          timezone:
+            type: string
+            description: Date time values
+          timezoneOffset:
+            type: string
+            description: Date and Time offset
+          version:
+            type: object
+            properties:
+              number:
+                type: string
+                description: >-
+                  Conditional Mandatory Revision Number of the Order for which
+                  the Scheduling details            are updated. This field is
+                  mandatory for Strategic Service Products namely Cable, NBN
+                  Voice (Fibre and Fixed Wireless) and NBN (Fibre and Fixed
+                  Wireless).
+          orderItems:
+            type: array
+            items:
+              $ref: '#/definitions/UWOSorderItems'
+  UWOSorderItems:
+    type: object
+    properties:
+      workforceIndicator:
+        type: string
+        description: 'Values are:- "Foxtel" "TELSTRA"'
+      requestedDeliveryDate:
+        type: string
+        description: >-
+          Date and Time when the Customer has requested for Hardware
+          Delivery             to the premise
+      requiredCompletionDate:
+        type: string
+        description: >-
+          Date and Time by when the Customer has requested for the Order
+          C                Completion.
+      product:
+        type: object
+        properties:
+          id:
+            type: string
+            description: >-
+              Conditional Mandatory. The Unique Product Instance ID for each
+              Service Product. This field is mandatory for Strategic Service
+              Products namely Cable, NBN Voice (Fibre and Fixed Wireless) and
+              NBN (Fibre and Fixed Wireless).
+          characteristics:
+            type: object
+            properties:
+              fnn:
+                type: string
+                description: >-
+                  Conditional Mandatory. The FNN should be 10 digit full
+                  national number. E.g.       0749354347. The FNN value should
+                  be provided for PSTN (Copper), ADSL and NBN Voice(Fibre and
+                  Fixed Wireless)
+              bpUserId:
+                type: string
+                description: >-
+                  Conditional Mandatory. The Bigpond User ID should be a valid
+                  email address. E.g. cya.mate@bigpond.com. The Bigpond User ID
+                  should be provided for ADSL, Cable and NBN Internet (Fibre and
+                  Fixed Wireless)
+              accessTechnology:
+                type: string
+                description: >-
+                  Access Type value to identify the Service Product. Valid
+                  Values - Copper FTTP Cable Wireless FTTB FTTN HFC
+      appointments:
+        type: array
+        items:
+          $ref: '#/definitions/UWOSRequestappointments'
+  UWOSRequestappointments:
+    type: object
+    properties:
+      id:
+        type: string
+        description: >-
+          Appointment ID for NBN Service Product. The value should be populated
+          when the NBN Start Date time is populated.
+      workforceSystem:
+        type: string
+        description: >-
+          Appointment type - indicates the workforce responsible for
+          performing            the work. Valid Values :- NBN,Telstra
+      requestedCompletionDate:
+        type: string
+        description: >-
+          Date and Time when the customer has requested that the Appointment
+          be            made.
+      requiredCompletionDate:
+        type: string
+        description: >-
+          YYYY-MM-DDTHH:mm:ss.0Z Mandatory Completion Date Date by which Telstra
+          is required to have the service working according to legislative
+          requirements. This field will only be returned by Legacy CONNECT if
+          customer service guarantee applies to the customer.
+
+          Obligatory Completion Date The date by which Telstra has agreed
+          (internally or regulatory) that under normal circimstances we must
+          deliver/fix the service. It should not be altered by Mass Service
+          Disruption (MSD). MandComplDateTime for legacy
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Mandatory for NBN Appointments Selected Appointment Lead Type
+
+          Expected values:- • 'Accelerated' - Appointment slot with high
+          priority in workforce calendar • 'Standard’ – Appointment slot with
+          normal priority in workforce calendar • 'PriorityAssist' - Appointment
+          slot which is Priority Assist in workforce calendar •
+          'OutsideSLAWindow' - Appointment slot that is Outside the SLA Window
+          for the requested request slot Default Values:- * 'Unknown' (ISL FWOM
+          will send default value incase if NBN is not sending any
+          appointmentLeadTime value)
+      reasonCode:
+        type: string
+        description: >-
+          Reschedule Reason code corresponding to the Reason for the
+          Scheduling            Update. If Reschedule Reason code not provided,
+          then the value will be defaulted to '66'. Refer to ISL-FUL FWOM Ref
+          Data LOVs AZI-7528 for Attribute Name = Reschedule Reason Code
+      dateChangeReasonCodeId:
+        type: string
+        description: >-
+          As per WFM-A the value of this field starts with either MSD or LSD
+          or            HWL based on which the consumers can understand if it’s
+          MSD/LSD/HWL. Returned if dates changed. The first occurrence of Date
+          Change Reason Code ID as returned by either Legacy WFM or Strategic
+          WFM systems. Returned if dates changed due to high work load or MSDs
+          created in CONNECT.
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            description: >-
+              Conditional Mandatory Date and Time for the Telstra Commitment
+              Start. This value is mandatory for NBN Orders. In the case of
+              Cable Disconenct, TCD might not be received
+
+              Conditional Mandatory. YYYY-MM-DDTHH:mm:ss.0Z and UTC value.
+
+              If the Date time value from the consumer is not appended with
+              '.0Z', then ISL will assume and automatically append '.0Z' during
+              processing.
+          endDateTime:
+            type: string
+            description: >-
+              Conditional Mandatory Date and Time for the Telstra Commitment
+              End. This value is mandatory for NBN Orders. In the case of Cable
+              Disconenct, TCD might not be received Conditional Mandatory.
+              YYYY-MM-DDTHH:mm:ss.0Z and UTC value. If the Date time value from
+              the consumer is not appended with '.0Z', then ISL will assume and
+              automatically append '.0Z' during processing
+      workforce:
+        type: object
+        properties:
+          organisationalUnit:
+            type: string
+            description: >-
+              Not Applicable for NBN Appointments Mandatory when Appt Type =
+              “FIELD”. Workforce Enterprise Unit Description.
+      slots:
+        type: array
+        items:
+          $ref: '#/definitions/UWOSRequestAppointmentsslots'
+  UWOSRequestAppointmentsslots:
+    type: object
+    properties:
+      serviceLevelAgreement:
+        type: string
+        description: >-
+          Mandatory for NBN Appointments First Appointment Lead Type Expected
+          values:- • 'Accelerated' - Appointment slot with high priority in
+          workforce calendar • 'Standard’ – Appointment slot with normal
+          priority in workforce calendar • 'PriorityAssist' - Appointment slot
+          which is Priority Assist in workforce calendar • 'OutsideSLAWindow' -
+          Appointment slot that is Outside the SLA Window for the requested
+          request slot Default Values:- * 'Unknown' (ISL FWOM will send default
+          value incase if NBN is not sending any appointmentLeadTime value)
+      timePeriod:
+        type: object
+        properties:
+          startDateTime:
+            type: string
+            description: >-
+              NBN start date and time for the appointment. This field is
+              required to perform same day/x-day calculation
+  UWOSResponse:
+    type: object
+    properties:
+      result:
+        type: object
+        properties:
+          status:
+            type: string
+            description: Gives the status code value in the response
+          message:
+            type: string
+            description: Provides a message in the response
+  Error:
+    type: object
+    properties:
+      status:
+        type: integer
+        format: int32
+        description: The status code.
+      code:
+        type: string
+        description: The Error code description
+      message:
+        type: string
+        description: Message describing the error.
+    example:
+      status: 400
+      code: FISL-BUS-0004
+      message: No jobs retrieved from both Cramer & SDDB
